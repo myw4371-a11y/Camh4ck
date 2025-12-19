@@ -3,7 +3,7 @@ from telebot import types
 import time
 
 # আপনার নতুন বোট টোকেন এখানে দিন
-BOT_TOKEN = "নতুন_টোকেন_এখানে_দিন" 
+BOT_TOKEN = "8403844691:AAG7ui2mJ08X8Q5kQ5jhpNoq1PGUqZpx6Ec" 
 bot = telebot.TeleBot(BOT_TOKEN)
 
 # আপনার GitHub পেজের লিঙ্ক
