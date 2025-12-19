@@ -47,3 +47,12 @@ def send_link(message):
 # বোট সচল রাখা
 print("বোটটি সচল আছে...")
 bot.polling(none_stop=True)
+# bot.py ফাইলের একদম নিচে এটি দিন
+if __name__ == "__main__":
+    try:
+        bot.remove_webhook() # পুরোনো জ্যাম থাকলে তা পরিষ্কার করবে
+        print("বোটটি সচল আছে...")
+        bot.infinity_polling(none_stop=True, timeout=10)
+    except Exception as e:
+        print(f"Error: {e}")
+
