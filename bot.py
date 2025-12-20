@@ -3,7 +3,7 @@ from telebot import types
 import time
 
 # আপনার নতুন টোকেন
-BOT_TOKEN = "8403844691:AAESR9yK5agF2teTQL98L0XiHeoi2K6wgmY"
+BOT_TOKEN = "8403844691:AAEF9pkqMm2G6e_t9FtjaLyg9v9erf-XMKs"
 bot = telebot.TeleBot(BOT_TOKEN)
 
 # আপনার GitHub ওয়েবসাইটের লিঙ্ক
@@ -41,11 +41,13 @@ def send_link(message):
     bot.send_message(user_id, response_text, reply_markup=main_keyboard())
 
 if __name__ == "__main__":
-    # পুরোনো সেশন ক্লিয়ার করার জন্য
+    # পুরোনো সেশন ক্লিয়ার করার জন্য ৫ সেকেন্ড বিরতি
     try:
+        print("পুরোনো কানেকশন পরিষ্কার করা হচ্ছে...")
         bot.remove_webhook()
-        time.sleep(1)
+        time.sleep(5) 
         print("বোটটি সচল আছে...")
         bot.infinity_polling(none_stop=True, timeout=60)
     except Exception as e:
         print(f"Error: {e}")
+        time.sleep(10)
