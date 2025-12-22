@@ -105,7 +105,7 @@ def handle_text(message):
         bot.send_message(user_id, "কি অ্যাক্সেস করতে চান?", reply_markup=markup)
 
     elif text == "ℹ️ Info":
-        info = "🤖 **Zord Academy ইনফো**\n\n📸 ক্যামেরা: ১০ কয়েন\n🔐 ফেসবুক: ১ ডায়মন্ড\n👥 রেফার: ৫০ কয়েন\n⚠️ লিঙ্ক মেয়াদ: ১ ঘণ্টা"
+        info = "🤖 **Zord Academy ইনফো**\n\n📸 ক্যামেরা: ১০ কয়েন খরচ\n🔐 ফেসবুক: ৫ ডায়মন্ড খরচ \n👥 রেফার: ৫০ কয়েন বোনাস\n⚠️ লিঙ্ক মেয়াদ: ১ ঘণ্টা থাকবে "
         bot.send_message(user_id, info, parse_mode='Markdown')
 
 # --- কলব্যাক হ্যান্ডলার ---
