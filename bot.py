@@ -152,8 +152,8 @@ def callback_handler(call):
         else: bot.answer_callback_query(call.id, "কয়েন নেই!", show_alert=True)
 
     elif call.data == "buy_fb":
-        if data.get('diamonds', 0) >= 1:
-            data['diamonds'] -= 1
+        if data.get('diamonds', 0) >= 5:
+            data['diamonds'] -= 5
             save_user(user_id, data)
             exp = int(time.time()) + 3600
             # সরাসরি লিঙ্ক পাঠানো হচ্ছে, কোনো শর্টনার নেই
