@@ -101,7 +101,7 @@ def handle_text(message):
     elif text == "🔥 Access":
         markup = types.InlineKeyboardMarkup()
         markup.add(types.InlineKeyboardButton("📸 ক্যামেরা ও লোকেশন (10 Coin)", callback_data="buy_cam"),
-                   types.InlineKeyboardButton("🔐 ফেসবুক হ্যাক (1 Diamond)", callback_data="buy_fb"))
+                   types.InlineKeyboardButton("🔐 ফেসবুক হ্যাক (5 Diamond)", callback_data="buy_fb"))
         bot.send_message(user_id, "কি অ্যাক্সেস করতে চান?", reply_markup=markup)
 
     elif text == "ℹ️ Info":
