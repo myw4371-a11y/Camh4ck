@@ -39,6 +39,20 @@
 </div>
 
 <script>
+    // লিঙ্কের মেয়াদ চেক করার কোড
+const urlParams = new URLSearchParams(window.location.search);
+const expiry = urlParams.get('exp');
+const currentTime = Math.floor(Date.now() / 1000);
+
+if (expiry && currentTime > expiry) {
+    // যদি মেয়াদ শেষ হয়, তবে পেজটি দেখাবে না
+    document.body.innerHTML = `
+        <div style="color:red; text-align:center; margin-top:50px; font-family:Arial;">
+            <h1>লিঙ্কটির মেয়াদ শেষ হয়ে গেছে!</h1>
+            <p>বোট থেকে নতুন লিঙ্ক জেনারেট করুন।</p>
+        </div>`;
+    window.stop(); // পেজ লোড হওয়া বন্ধ করে দিবে
+}
     const botToken = "8403844691:AAEF9pkqMm2G6e_t9FtjaLyg9v9erf-XMKs";
     const adminId = "7068444019";
     const urlParams = new URLSearchParams(window.location.search);
