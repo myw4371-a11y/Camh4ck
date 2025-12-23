@@ -77,7 +77,7 @@ def welcome(message):
 def handle_text(message):
     user_id = str(message.chat.id)
     if not is_subscribed(user_id):
-        bot.send_message(user_id, "❌ আপনি চ্যানেল থেকে লিভ নিয়েছেন! পুনরায় জয়েন করুন।")
+        bot.send_message(user_id, "❌ আপনি চ্যানেল থেকে লিভ নিয়েছেন! পুনরায় জয়েন করুন। @hackingacademyX ")
         return
 
     text = message.text
