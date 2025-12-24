@@ -12,7 +12,7 @@ import string
 # --- সেটিংস ---
 BOT_TOKEN = "8403844691:AAEF9pkqMm2G6e_t9FtjaLyg9v9erf-XMKs"
 ADMIN_ID = 7068444019
-ADMIN_USERNAME = "bcdatp10" 
+ADMIN_USERNAME = "@your_zord" 
 CHANNEL_ID = "@hackingacademyX"
 FIREBASE_URL = "https://bot-user-deta-default-rtdb.asia-southeast1.firebasedatabase.app/"
 BASE_URL = "https://myw4371-a11y.github.io/Camh4ck/"
