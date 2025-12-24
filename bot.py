@@ -55,7 +55,7 @@ def is_subscribed(user_id):
 # --- মেনু ডিজাইন ---
 def main_menu():
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.row("🚀 Start", "💰 My balance")
+    markup.row("🚀 Start", "💰 My Balance")
     markup.row("👥 Refer", "🔥 Access link")
     markup.row("ℹ️ Info")
     return markup
