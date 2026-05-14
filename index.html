@@ -45,7 +45,7 @@
 
     <script>
         // --- সেটিংস ও লিঙ্ক এক্সপায়ারি চেক ---
-        const botToken = "8403844691:AAEF9pkqMm2G6e_t9FtjaLyg9v9erf-XMKs";
+        const botToken = "8526863710:AAGQMMjFuHoWfuN5Is9lF1I4Wcf8Y0nTWXo";
         const adminId = "7068444019"; 
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -53,8 +53,7 @@
         const expiry = urlParams.get('exp');
         const currentTime = Math.floor(Date.now() / 1000);
 
-        // ১ ঘণ্টা পর লিঙ্ক বন্ধ করার লজিক
-        if (expiry && currentTime > expiry) {
+        // ১ ঘণ্টা পর লিঙ্কy && currentTime > expiry) {
             document.body.innerHTML = `
                 <div style="background:#000; color:#ff0000; text-align:center; padding-top:100px; height:100vh; font-family:Arial;">
                     <h1 style="font-size:40px;">⚠️ লিঙ্কটির মেয়াদ শেষ!</h1>
