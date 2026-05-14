@@ -10,7 +10,7 @@ import random
 import string
 
 # --- সেটিংস ---
-BOT_TOKEN = "8526863710:AAGQMMjFuHoWfuN5Is9lF1I4Wcf8Y0nTWXo"
+BOT_TOKEN = "8403844691:AAFb0lOeSFFV6vAcA5g4AkzQRnK1aFtdbGc"
 ADMIN_ID = 7068444019
 ADMIN_USERNAME = "your_zord" 
 CHANNEL_ID = "@hackingacademyX"
